@@ -20,27 +20,17 @@
       app:layout_constraintTop_toTopOf="parent"
       app:srcCompat="@drawable/chessboard" />
 
-  <androidx.constraintlayout.widget.ConstraintLayout
-      android:id="@+id/boardContainer"
+  <androidx.gridlayout.widget.GridLayout
+      android:id="@+id/boardGridLayout"
       android:layout_width="0dp"
       android:layout_height="0dp"
+      app:columnCount="8"
       app:layout_constraintBottom_toBottomOf="@+id/boardImageView"
       app:layout_constraintEnd_toEndOf="@+id/boardImageView"
       app:layout_constraintStart_toStartOf="@+id/boardImageView"
-      app:layout_constraintTop_toTopOf="@+id/boardImageView">
+      app:layout_constraintTop_toTopOf="@+id/boardImageView"
+      app:rowCount="8">
 
-    <androidx.gridlayout.widget.GridLayout
-        android:id="@+id/boardGridLayout"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:columnCount="8"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:rowCount="8">
-
-    </androidx.gridlayout.widget.GridLayout>
-  </androidx.constraintlayout.widget.ConstraintLayout>
+  </androidx.gridlayout.widget.GridLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
