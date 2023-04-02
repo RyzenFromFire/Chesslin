@@ -1,3 +1,5 @@
 <resources>
   <string name="app_name">Chesslin</string>
+    <string name="chess_board_desc">Chess Board</string>
+    <string name="placeholder_symbol">PL</string>
 </resources>
