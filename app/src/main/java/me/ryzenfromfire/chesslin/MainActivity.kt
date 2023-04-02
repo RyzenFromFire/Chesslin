@@ -35,11 +35,11 @@ class MainActivity : AppCompatActivity() {
 
         // Dynamic GridLayout Generation adapted from:
         // https://stackoverflow.com/questions/14728157/dynamic-gridlayout
+        // TODO: Store a reference to each textview in an array?
         var tv: TextView
         for (rank in NUM_RANKS_FILES downTo 1) {
             for (file in 0 until NUM_RANKS_FILES) {
                 tv = TextView(this)
-//                tv.text = getString(R.string.placeholder_symbol)
                 tv.text = "${ChessFile.values()[file].str}$rank"
 
                 // Create the row and column specifications
