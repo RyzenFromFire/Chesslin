@@ -54,32 +54,5 @@ class MainActivity : AppCompatActivity() {
                 boardGridLayout.addView(tv, params)
             }
         }
-
-//        var i = 0
-//        var c = 0
-//        var r = 0
-//        while (i < 64) {
-//            if (c == column) {
-//                c = 0
-//                r++
-//            }
-//            val oImageView = ImageView(this)
-//            oImageView.setImageResource(R.drawable.ic_launcher)
-//            oImageView.layoutParams = GridLayout.LayoutParams(100, 100)
-//            var rowSpan: GridLayout.Spec? = GridLayout.spec(GridLayout.UNDEFINED, 1)
-//            var colspan: GridLayout.Spec? = GridLayout.spec(GridLayout.UNDEFINED, 1)
-//            if (r == 0 && c == 0) {
-//                Log.e("", "spec")
-//                colspan = GridLayout.spec(GridLayout.UNDEFINED, 2)
-//                rowSpan = GridLayout.spec(GridLayout.UNDEFINED, 2)
-//            }
-//            val gridParam: GridLayout.LayoutParams = GridLayout.LayoutParams(
-//                rowSpan, colspan
-//            )
-//            gridLayout.addView(oImageView, gridParam)
-//            i++
-//            c++
-//        }
-
     }
 }
