@@ -5,7 +5,11 @@ import me.ryzenfromfire.chesslin.ChessGame.Player
 
 class ChessBoard {
     // Access Syntax: boardArray[rank][file]
-    private var boardArray = Array(ChessGame.NUM_RANKS_FILES) { Array(ChessGame.NUM_RANKS_FILES) { ChessPiece() } }
+    private var boardArray = Array(NUM_RANKS_FILES) { Array(NUM_RANKS_FILES) { ChessPiece() } }
+
+    companion object {
+        const val NUM_RANKS_FILES = 8
+    }
 
     enum class File(val str: String, val index: Int) {
         A("a", 0),
@@ -20,7 +24,7 @@ class ChessBoard {
         companion object {
             private val fileMap = File.values().associateBy { it.str }
             fun parse(file: Char) = fileMap[file.toString()]
-            val files = arrayOf(File.values().forEach { it.str })
+            val files = Array(NUM_RANKS_FILES) { File.values()[it].str }
         }
     }
 

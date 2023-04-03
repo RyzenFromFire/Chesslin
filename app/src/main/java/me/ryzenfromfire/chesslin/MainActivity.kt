@@ -5,7 +5,7 @@ import android.view.Gravity
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.gridlayout.widget.GridLayout
-import me.ryzenfromfire.chesslin.ChessGame.Companion.NUM_RANKS_FILES
+import me.ryzenfromfire.chesslin.ChessBoard.Companion.NUM_RANKS_FILES
 
 class MainActivity : AppCompatActivity() {
     private lateinit var boardGridLayout: GridLayout
@@ -43,7 +43,5 @@ class MainActivity : AppCompatActivity() {
                 boardGridLayout.addView(tv, params)
             }
         }
-
-        print("[${ChessBoard.File.files.joinToString()}]")
     }
 }
