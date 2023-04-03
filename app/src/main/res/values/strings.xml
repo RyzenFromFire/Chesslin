@@ -1,5 +1,7 @@
 <resources>
   <string name="app_name">Chesslin</string>
-    <string name="chess_board_desc">Chess Board</string>
-    <string name="placeholder_symbol">PL</string>
+  <string name="chess_board_desc">Chess Board</string>
+  <string name="placeholder_symbol">PL</string>
+  <string name="turn_white">It\'s White\'s turn.</string>
+  <string name="turn_black">It\'s Black\'s turn.</string>
 </resources>

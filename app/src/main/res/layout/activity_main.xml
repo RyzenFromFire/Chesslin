@@ -33,4 +33,41 @@
 
   </androidx.gridlayout.widget.GridLayout>
 
+  <EditText
+    android:id="@+id/moveEditText"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:ems="10"
+    android:inputType="textPersonName"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    android:autofillHints="e4"
+    tools:ignore="LabelFor" />
+
+  <TextView
+    android:id="@+id/moveEditTextLabel"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="16dp"
+    android:text="Move"
+    android:textSize="25sp"
+    app:layout_constraintBottom_toTopOf="@+id/moveEditText"
+    app:layout_constraintEnd_toEndOf="@+id/moveEditText"
+    app:layout_constraintStart_toStartOf="@+id/moveEditText"
+    tools:ignore="HardcodedText" />
+
+  <TextView
+    android:id="@+id/turnTextView"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="16dp"
+    android:layout_marginTop="32dp"
+    android:layout_marginEnd="16dp"
+    android:text="@string/turn_white"
+    android:textSize="25sp"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toTopOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
