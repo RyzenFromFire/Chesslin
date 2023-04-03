@@ -5,23 +5,12 @@ import android.view.Gravity
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.gridlayout.widget.GridLayout
-
+import me.ryzenfromfire.chesslin.ChessGame.Companion.NUM_RANKS_FILES
 
 class MainActivity : AppCompatActivity() {
     private lateinit var boardGridLayout: GridLayout
-    companion object {
-        const val NUM_RANKS_FILES = 8
-    }
-    enum class ChessFile(val str: String, val index: Int) {
-        A("a", 0),
-        B("b", 1),
-        C("c", 2),
-        D("d", 3),
-        E("e", 4),
-        F("f", 5),
-        G("g", 6),
-        H("h", 7)
-    }
+
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,7 +29,7 @@ class MainActivity : AppCompatActivity() {
         for (rank in NUM_RANKS_FILES downTo 1) {
             for (file in 0 until NUM_RANKS_FILES) {
                 tv = TextView(this)
-                tv.text = "${ChessFile.values()[file].str}$rank"
+                tv.text = "${ChessBoard.File.values()[file].str}$rank"
 
                 // Create the row and column specifications
                 // 'start' = UNDEFINED, that's fine.
@@ -54,5 +43,7 @@ class MainActivity : AppCompatActivity() {
                 boardGridLayout.addView(tv, params)
             }
         }
+
+        print("[${ChessBoard.File.files.joinToString()}]")
     }
 }
