@@ -1,5 +1,6 @@
 package me.ryzenfromfire.chesslin
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.Gravity
 import android.widget.TextView
@@ -9,8 +10,6 @@ import me.ryzenfromfire.chesslin.ChessBoard.Companion.NUM_RANKS_FILES
 
 class MainActivity : AppCompatActivity() {
     private lateinit var boardGridLayout: GridLayout
-
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,8 +27,9 @@ class MainActivity : AppCompatActivity() {
         var tv: TextView
         for (rank in NUM_RANKS_FILES downTo 1) {
             for (file in 0 until NUM_RANKS_FILES) {
+                val str = "${ChessBoard.File.values()[file].str}${rank}"
                 tv = TextView(this)
-                tv.text = "${ChessBoard.File.values()[file].str}$rank"
+                tv.text = str
 
                 // Create the row and column specifications
                 // 'start' = UNDEFINED, that's fine.
