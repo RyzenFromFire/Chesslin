@@ -18,12 +18,11 @@ class ChessGame {
         // If the first character of the algebraic notation is 'a'..'h', then the piece is a pawn.
         val pieceType: Piece
         val originSquare: Piece
-        if (str[0] in files) {
-            pieceType = Piece.PAWN
-
+        val first = str[0].lowercase()[0]
+        if (first in files) {
+            val file = first
             // Pawn move without capture (ex. c5)
             if (str.length == 2) {
-                val file = str[0]
                 val destRank = str[1].digitToInt()
                 val origRank: Int = if (turn == Player.WHITE) {
                     if (board.get("${str[0]}${destRank - 2}").piece == Piece.PAWN)
@@ -36,8 +35,8 @@ class ChessGame {
                     else
                         destRank + 1
                 } else destRank // error state, should never occur
-                board.set("${file}${origRank}", turn, Piece.NONE)
-                board.set("${file}${destRank}", turn, Piece.PAWN)
+                board.set("$file${origRank}", turn, Piece.NONE)
+                board.set("$file${destRank}", turn, Piece.PAWN)
             }
             // Pawn move with capture
             else if (str.length == 4 && str[1].equals('x', true)) {
