@@ -14,6 +14,7 @@ class ChessGame {
     // Takes a move in algebraic notation, e.g. Qf8
     fun move(str: String) {
         // TODO: Input validation
+        // TODO: the ChessPiece should determine whether it can move to a different square given its current square.
 
         // If the first character of the algebraic notation is 'a'..'h', then the piece is a pawn.
         val pieceType: Piece
@@ -35,6 +36,7 @@ class ChessGame {
                     else
                         destRank + 1
                 } else destRank // error state, should never occur
+                // TODO: make a board.move function to let that handle the setting instead of this:
                 board.set("$file${origRank}", turn, Piece.NONE)
                 board.set("$file${destRank}", turn, Piece.PAWN)
             }

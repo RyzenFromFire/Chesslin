@@ -18,6 +18,7 @@ class MainActivity : AppCompatActivity() {
     // TODO: Implement actual move system
     private lateinit var moveEditText: EditText
     private lateinit var moveSubmitButton: Button
+    private lateinit var turnTextView: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,15 +33,15 @@ class MainActivity : AppCompatActivity() {
 
         boardViewArray = Array(NUM_RANKS_FILES) { Array(NUM_RANKS_FILES) { TextView(this) } }
 
+        turnTextView = findViewById(R.id.turnTextView)
+
         // Dynamic GridLayout Generation adapted from:
         // https://stackoverflow.com/questions/14728157/dynamic-gridlayout
-        // TODO: Store a reference to each textview in an array?
         var tv: TextView
         for (rank in NUM_RANKS_FILES downTo 1) {
             for (file in 0 until NUM_RANKS_FILES) {
                 val str = "${ChessBoard.File.values()[file].str}${rank}"
                 tv = TextView(this)
-//                tv.text = str
                 tv.text = game.board.get(str).piece.str
                 setColor(tv, game.board.get(str).player)
                 boardViewArray[rank - 1][file] = tv
@@ -62,6 +63,9 @@ class MainActivity : AppCompatActivity() {
         moveSubmitButton = findViewById(R.id.moveSubmitButton)
         moveSubmitButton.setOnClickListener {
             game.move(moveEditText.text.toString())
+            if (game.turn == Player.BLACK)
+                turnTextView.text = getString(R.string.turn_black)
+            else turnTextView.text = getString(R.string.turn_white)
         }
 
         game.board.onSet = { rank0: Int, file: ChessBoard.File, player: Player, piece: ChessPiece.Piece ->
