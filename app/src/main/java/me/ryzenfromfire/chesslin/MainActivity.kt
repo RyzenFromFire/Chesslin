@@ -68,10 +68,12 @@ class MainActivity : AppCompatActivity() {
             else turnTextView.text = getString(R.string.turn_white)
         }
 
-        game.board.onSet = { rank0: Int, file: ChessBoard.File, player: Player, piece: ChessPiece.Piece ->
-            val view = boardViewArray[rank0][file.index]
-            view.text = piece.str
-            setColor(view, player)
+        game.board.onSet = { position: ChessBoard.Position, chessPiece: ChessPiece ->
+            if (position.valid) {
+                val view = boardViewArray[position.rank - 1][position.file.index]
+                view.text = chessPiece.piece.str
+                setColor(view, chessPiece.player)
+            }
         }
     }
 

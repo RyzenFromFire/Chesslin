@@ -11,7 +11,7 @@ class ChessBoard {
     // rank is 0-based
 //    var onSet = { rank0: Int, file: File, player: Player, piece: Piece -> print("${rank0}${file}: $player ${piece.str}")}
 
-    var onSet: ((Int, File, Player, Piece) -> Unit)? = null
+    var onSet: ((Position, ChessPiece) -> Unit)? = null
 
     companion object {
         const val NUM_RANKS_FILES = 8
@@ -29,36 +29,52 @@ class ChessBoard {
 
         companion object {
             private val fileMap = File.values().associateBy { it.str }
-            fun parse(file: Char) = fileMap[file.toString()]
+            fun parse(file: Char) = fileMap[file.toString()] ?: File.A
             val files = Array(NUM_RANKS_FILES) { File.values()[it].str[0] }
+        }
+    }
+
+    class Position(var file: File = File.A, var rank: Int = 0) {
+        constructor(str: String) : this(File.parse(str[0]), str[1].digitToInt())
+
+        var valid = true
+        init {
+            if (this.rank !in 1..NUM_RANKS_FILES) {
+                valid = false
+            }
+            if (this.file !in File.values()) {
+                valid = false
+            }
+        }
+
+        override fun toString(): String {
+            return if (!valid) "" else file.str + rank.toString()
         }
     }
 
     init { reset() }
 
-    fun set(position: String, player: Player, piece: Piece) {
-        // TODO: position validation
-        val file: File = File.parse(position[0])!!
-        val rank: Int = (position[1].digitToInt()) - 1 // 0-based
-        set(rank, file, player, piece, true)
+    fun set(position: Position, chessPiece: ChessPiece): Boolean {
+        return if (position.valid) {
+            val fileIdx = position.file.index
+            val rank0 = position.rank - 1
+            boardArray[rank0][fileIdx] = chessPiece
+            onSet?.invoke(position, chessPiece)
+            true
+        } else false
     }
 
-    fun set(rank: Int, file: File, player: Player, piece: Piece, rankIsZeroBased: Boolean = false) {
-        // ensure zero-based rank
-        val rank0 = if (rankIsZeroBased) rank else (rank - 1)
-        boardArray[rank0][file.index] = ChessPiece(piece, player)
-        onSet?.invoke(rank0, file, player, piece)
+    fun set(posStr: String, chessPiece: ChessPiece): Boolean = set(Position(posStr), chessPiece)
+
+    fun set(posStr: String, player: Player, piece: Piece): Boolean = set(posStr, ChessPiece(piece=piece, player=player))
+
+    fun get(position: Position): ChessPiece {
+        val fileIdx = position.file.index
+        val rank0 = position.rank - 1
+        return boardArray[rank0][fileIdx]
     }
 
-    fun get(position: String): ChessPiece {
-        val rank = (position[1].digitToInt()) - 1
-        val file = File.parse(position[0])!!
-        return get(rank, file)
-    }
-
-    fun get(rank0: Int, file: File): ChessPiece {
-        return boardArray[rank0][file.index]
-    }
+    fun get(posStr: String): ChessPiece = get(Position(posStr))
 
     fun reset() {
         // White's Pieces
