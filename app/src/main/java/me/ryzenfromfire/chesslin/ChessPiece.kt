@@ -17,8 +17,8 @@ class ChessPiece(val piece: Piece = Piece.NONE, val player: Player = Player.NONE
             private val pieceAbbrevMap = Piece.values().associateBy { it.str }
             private val pieceFullNameMap = Piece.values().associateBy { it.fullStr }
             // Parses a piece as a string into a ChessPiece.Piece (ex. "p" -> PAWN)
-            fun parseShort(abbreviation: String) = pieceAbbrevMap[abbreviation.uppercase().take(1)]
-            fun parseLong(fullName: String) = pieceFullNameMap[fullName.lowercase().replaceFirstChar { it.uppercase() }]
+            fun parseShort(abbreviation: String) = pieceAbbrevMap[abbreviation.uppercase().take(1)] ?: NONE
+            fun parseLong(fullName: String) = pieceFullNameMap[fullName.lowercase().replaceFirstChar { it.uppercase() }] ?: NONE
         }
     }
 

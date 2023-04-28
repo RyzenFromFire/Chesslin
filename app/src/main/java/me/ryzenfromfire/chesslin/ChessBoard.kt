@@ -31,7 +31,7 @@ class ChessBoard {
 
         companion object {
             private val fileMap = File.values().associateBy { it.str }
-            fun parse(file: Char) = fileMap[file.toString()] ?: File.A
+            fun parse(file: Char) = fileMap[file.toString()] ?: A
             val files = Array(NUM_RANKS_FILES) { File.values()[it].str[0] }
         }
     }

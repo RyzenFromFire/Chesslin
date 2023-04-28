@@ -56,7 +56,7 @@ class ChessGame {
                 print("pawn move capture")
             }
         } else { // Otherwise it is a non-pawn piece
-            pieceType = Piece.parseShort(str[0].toString())!!
+            pieceType = Piece.parseShort(str[0].toString())
 
             val isCapture: Boolean
             val offset: Int
