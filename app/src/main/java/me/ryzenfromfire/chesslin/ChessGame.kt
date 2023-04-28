@@ -7,6 +7,7 @@ import me.ryzenfromfire.chesslin.ChessBoard.Position
 class ChessGame {
     var turn = Player.WHITE
     val board = ChessBoard()
+    val moves = mutableListOf<ChessMove>()
     var selection = Position.NULL // Don't modify directly outside of this file
     var lastSelection = Position.NULL
     var pieceSelected = false
@@ -38,9 +39,10 @@ class ChessGame {
             // using listener similar to ChessBoard, update MainActivity with list of movable positions to display indicators
         }
         // otherwise, if we have selected a piece last time this function was called, and we just selected a new position, make a move
-        // note that `position.valid` is functionally identical to `selection != Position.NULL`, and is probably easier to compute
+        // note that `position.valid` is functionally identical to `selection != Position.NULL`, since Position.NULL is automatically invalid
         else if (lastPieceSelected && lastSelection != Position.NULL && position.valid) {
             val promotion = PieceType.NONE // TODO: Implement promotion logic if pawn reaches back rank
+            val castle = false // TODO: Implement castling logic using ChessMove.castleValid(). This might be better suited to the previous if statement and/or class property
             val move = ChessMove(
                 game = this,
                 num = currentMove,
@@ -49,9 +51,10 @@ class ChessGame {
                 end = selection,
                 capture = if (pieceSelected) board.get(selection) else ChessPiece.NULL,
                 promotion = promotion,
+                castle = castle
             )
 
-            currentMove++
+            move(move)
             selection = Position.NULL
             pieceSelected = false
         }
@@ -61,6 +64,12 @@ class ChessGame {
     }
 
     private fun move(move: ChessMove): Boolean {
+        if (!move.valid) return false
+        board.set(position = move.end, piece = move.piece)
+        board.set(position = move.start, piece = ChessPiece.NULL)
+        // TODO: add functionality to keep track of pieces captured by each player
+        moves.add(move)
+        currentMove++
         return true
     }
 

@@ -15,19 +15,24 @@ class ChessMove(
     val end: Position,
     val capture: ChessPiece = ChessPiece(),
     val promotion: PieceType = PieceType.NONE,
-    val castle: Boolean = false,
-    val check: Player = Player.NONE
+    val castle: Boolean = false
 ) {
+    val check: Player = Player.NONE // the player who is checked as a result of the move
     var valid: Boolean = true
     private var notation: String = ""
 
     init {
-        // If this is the case, then somehow the moves have gone out of sync
+        if (!start.valid || !end.valid) valid = false
+
+        // Check if moves have gone out of sync
         if (num % 2 == 0 && piece.player != BLACK) {
             valid = false
         }
 
-        if (!start.valid || !end.valid) valid = false
+        // TODO: Implement checking for if the player whose turn it is is in check, and limit moves appropriately
+        // TODO: probably implement another checking function in the companion object to do this
+
+        // TODO: look at the game state to determine if the move leads to a check, and update game.inCheck appropriately
 
         // Game End Notation
         if (game.gameOver) {

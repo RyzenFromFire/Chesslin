@@ -3,13 +3,14 @@ package me.ryzenfromfire.chesslin
 import me.ryzenfromfire.chesslin.ChessGame.Player
 import me.ryzenfromfire.chesslin.ChessBoard.Position
 
-class ChessPiece(val type: PieceType = PieceType.NONE, val player: Player = Player.NONE) {
+class ChessPiece(var type: PieceType = PieceType.NONE, val player: Player = Player.NONE) {
     var hasMoved = false
         set(value) {
             hasJustMoved = !field && value
             field = value
         }
     var hasJustMoved = false
+
     enum class PieceType(val str: String, val fullStr: String, val points: Int) {
         NONE("", "", 0),
         PAWN("P", "Pawn", 1),
@@ -30,7 +31,10 @@ class ChessPiece(val type: PieceType = PieceType.NONE, val player: Player = Play
 
     // TODO: Implement move checking
     // TODO: Can check if a move is blocked by checking game.board.get(position)
-
+    /**
+     * Returns a list of positions that can be potentially be reached by this piece,
+     * without considering obstructions or limitations due to checks or pins.
+     */
     fun getMovablePositions(game: ChessGame): MutableList<Position> {
         return when (this.type) {
             PieceType.PAWN -> getPawnPositions(game)
@@ -41,6 +45,21 @@ class ChessPiece(val type: PieceType = PieceType.NONE, val player: Player = Play
             PieceType.KING -> getKingPositions(game)
             else -> mutableListOf<Position>()
         }
+    }
+
+    /**
+     * Promotes the piece to a knight, bishop, rook, or queen by changing `this.type`
+     * Returns true only if the passed `type` was a valid promotion piece.
+     */
+    fun promote(type: PieceType): Boolean {
+        this.type = when (type) {
+            PieceType.ROOK -> type
+            PieceType.BISHOP -> type
+            PieceType.KNIGHT -> type
+            PieceType.QUEEN -> type
+            else -> return false
+        }
+        return true
     }
 
     // Global/static methods for checking positions given a game state
