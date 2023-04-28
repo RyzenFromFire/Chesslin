@@ -1,6 +1,8 @@
 package me.ryzenfromfire.chesslin
 
+import me.ryzenfromfire.chesslin.ChessPiece.Piece.*
 import me.ryzenfromfire.chesslin.ChessPiece.Piece
+import me.ryzenfromfire.chesslin.ChessGame.Player.*
 import me.ryzenfromfire.chesslin.ChessGame.Player
 
 class ChessBoard {
@@ -68,6 +70,10 @@ class ChessBoard {
 
     fun set(posStr: String, player: Player, piece: Piece): Boolean = set(posStr, ChessPiece(piece=piece, player=player))
 
+    fun set(position: Position) = set(position, ChessPiece())
+
+    fun set(posStr: String) = set(Position(posStr))
+
     fun get(position: Position): ChessPiece {
         val fileIdx = position.file.index
         val rank0 = position.rank - 1
@@ -78,40 +84,40 @@ class ChessBoard {
 
     fun reset() {
         // White's Pieces
-        set("a1", Player.WHITE, Piece.ROOK)
-        set("b1", Player.WHITE, Piece.KNIGHT)
-        set("c1", Player.WHITE, Piece.BISHOP)
-        set("d1", Player.WHITE, Piece.QUEEN)
-        set("e1", Player.WHITE, Piece.KING)
-        set("f1", Player.WHITE, Piece.BISHOP)
-        set("g1", Player.WHITE, Piece.KNIGHT)
-        set("h1", Player.WHITE, Piece.ROOK)
+        set("a1", WHITE, ROOK)
+        set("b1", WHITE, KNIGHT)
+        set("c1", WHITE, BISHOP)
+        set("d1", WHITE, QUEEN)
+        set("e1", WHITE, KING)
+        set("f1", WHITE, BISHOP)
+        set("g1", WHITE, KNIGHT)
+        set("h1", WHITE, ROOK)
 
         // White's Pawns
         for (c in 'a'..'h') {
-            set("${c}2", Player.WHITE, Piece.PAWN)
+            set("${c}2", WHITE, PAWN)
         }
 
         // Empty Middle of Board
         for (rank in 3..6) {
             for (c in 'a'..'h') {
-                set("${c}${rank}", Player.NONE, Piece.NONE)
+                set("${c}${rank}")
             }
         }
 
         // Black's Pawns
         for (c in 'a'..'h') {
-            set("${c}7", Player.BLACK, Piece.PAWN)
+            set("${c}7", BLACK, PAWN)
         }
 
         // Black's Pieces
-        set("a8", Player.BLACK, Piece.ROOK)
-        set("b8", Player.BLACK, Piece.KNIGHT)
-        set("c8", Player.BLACK, Piece.BISHOP)
-        set("d8", Player.BLACK, Piece.QUEEN)
-        set("e8", Player.BLACK, Piece.KING)
-        set("f8", Player.BLACK, Piece.BISHOP)
-        set("g8", Player.BLACK, Piece.KNIGHT)
-        set("h8", Player.BLACK, Piece.ROOK)
+        set("a8", BLACK, ROOK)
+        set("b8", BLACK, KNIGHT)
+        set("c8", BLACK, BISHOP)
+        set("d8", BLACK, QUEEN)
+        set("e8", BLACK, KING)
+        set("f8", BLACK, BISHOP)
+        set("g8", BLACK, KNIGHT)
+        set("h8", BLACK, ROOK)
     }
 }

@@ -6,10 +6,20 @@ import me.ryzenfromfire.chesslin.ChessBoard.File.Companion.files
 class ChessGame {
     var turn = Player.WHITE
     val board = ChessBoard()
+    var inCheck: Player = Player.NONE
+    var gameOver: Boolean = false
+    lateinit var winner: Player
+    private lateinit var lastMove: ChessMove // TODO: Implement
 
-    enum class Player {
-        NONE, WHITE, BLACK
+    enum class Player(val str: String) {
+        NONE("None"),
+        WHITE("White"),
+        BLACK("Black")
     }
+
+    fun getLastMove(): ChessMove = lastMove
+
+    // To get a piece at a given position, access game.board.get(position)
 
     // Takes a move in algebraic notation, e.g. Qf8
     fun move(str: String) {
@@ -46,7 +56,7 @@ class ChessGame {
                 print("pawn move capture")
             }
         } else { // Otherwise it is a non-pawn piece
-            pieceType = Piece.parse(str[0].toString())!!
+            pieceType = Piece.parseShort(str[0].toString())!!
 
             val isCapture: Boolean
             val offset: Int
