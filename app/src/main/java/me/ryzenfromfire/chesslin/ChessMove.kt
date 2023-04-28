@@ -2,8 +2,8 @@ package me.ryzenfromfire.chesslin
 
 import me.ryzenfromfire.chesslin.ChessBoard.Position
 import me.ryzenfromfire.chesslin.ChessBoard.File.*
-import me.ryzenfromfire.chesslin.ChessPiece.Piece
-import me.ryzenfromfire.chesslin.ChessPiece.Piece.*
+import me.ryzenfromfire.chesslin.ChessPiece.PieceType
+import me.ryzenfromfire.chesslin.ChessPiece.PieceType.*
 import me.ryzenfromfire.chesslin.ChessGame.Player
 import me.ryzenfromfire.chesslin.ChessGame.Player.*
 
@@ -13,8 +13,8 @@ class ChessMove(
     val piece: ChessPiece,
     val start: Position,
     val end: Position,
-    val capture: Piece = Piece.NONE,
-    val promotion: Piece = Piece.NONE,
+    val capture: ChessPiece = ChessPiece(),
+    val promotion: PieceType = PieceType.NONE,
     val castle: Boolean = false,
     val check: Player = Player.NONE
 ) {
@@ -40,25 +40,20 @@ class ChessMove(
 
         // Castling Logic and Notation
         if (castle) {
-            if (
-                start.rank == end.rank &&
-                piece.piece == KING &&
-                start.file == E &&
-                ((start.rank == 1 && piece.player == WHITE) || (start.rank == 8 && piece.player == BLACK))
-            ) {
+            if (castleValid(piece = piece, start = start, end = end)) {
                 when (end.file) {
-                    A -> notation = "${num}. O-O-O"
-                    H -> notation = "${num}. O-O"
-                    else -> valid = false
+                    B -> notation = "${num}. O-O-O"
+                    G -> notation = "${num}. O-O"
+                    else -> valid = false // should be unreachable
                 }
             } else valid = false
         }
 
         // En Passant Logic
-        if (piece.piece == PAWN && // If this piece is a pawn
-            this.capture == PAWN && // If the piece captured is a pawn
-            game.getLastMove().piece.piece != PAWN && // If the last piece moved was NOT a pawn
-            game.getLastMove().end.rank != this.end.rank
+        if (piece.type == PAWN && // If this piece is a pawn
+            this.capture.type == PAWN && // If the piece captured is a pawn
+            game.lastMove.piece.type != PAWN && // If the last piece moved was NOT a pawn
+            game.lastMove.end.rank != this.end.rank
         ) {
             // Then if the location where the last move ended
             // and the place where this move is capturing
@@ -67,11 +62,42 @@ class ChessMove(
         }
     }
 
+    companion object {
+        fun castleValid(piece: ChessPiece, start: Position, end: Position): Boolean {
+            return (
+                start.rank == end.rank &&
+                piece.type == KING &&
+                start.file == E &&
+                (end.file == B || end.file == G) &&
+                ((start.rank == 1 && piece.player == WHITE) || (start.rank == 8 && piece.player == BLACK))
+            )
+        }
+
+        fun getEnPassantPosition(piece: ChessPiece, pos: Position, lastMove: ChessMove): Position {
+            val file = pos.file
+            val rank = pos.rank
+
+            if (!lastMove.valid || lastMove.piece.type != PAWN) return Position.NULL
+
+            // Check left side
+            if ((piece.player == WHITE && file != A) || (piece.player == BLACK && file != H)) {
+
+            }
+
+            // Check right side
+            if ((piece.player == BLACK && file != A) || (piece.player == WHITE && file != H)) {
+
+            }
+
+            return Position.NULL
+        }
+    }
+
     override fun toString(): String {
         if (!valid) return "ERROR"
         // Ex. White R on a1 to a4 with capture
-        var str = "{${piece.player.str} ${piece.piece.str} on $start to $end"
-        if (capture != Piece.NONE) str += " with capture"
+        var str = "{${piece.player.str} ${piece.type.str} on $start to $end"
+        if (capture != ChessPiece.NULL) str += " with capture"
         return str
     }
 
@@ -84,15 +110,15 @@ class ChessMove(
         sb.append("${num}. ")
 
         // Standard Move Logic
-        if (piece.piece != PAWN) {
-            sb.append(piece.piece.str)
+        if (piece.type != PAWN) {
+            sb.append(piece.type.str)
         }
         sb.append(start.toString())
-        if (capture != Piece.NONE) sb.append("x")
+        if (capture != ChessPiece.NULL) sb.append("x")
         sb.append(end.toString())
 
         // Promotion Logic
-        if (promotion != Piece.NONE) {
+        if (promotion != PieceType.NONE) {
             if (promotion == KING || promotion == PAWN) valid = false
             else sb.append("=${promotion.str}")
         }
