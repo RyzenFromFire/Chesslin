@@ -2,8 +2,6 @@ package me.ryzenfromfire.chesslin
 
 import android.os.Bundle
 import android.view.Gravity
-import android.widget.Button
-import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.gridlayout.widget.GridLayout
@@ -17,9 +15,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var boardViewArray: Array<Array<TextView>>
     private lateinit var game: ChessGame
 
-    // TODO: Implement actual move system
-    private lateinit var moveEditText: EditText
-    private lateinit var moveSubmitButton: Button
     private lateinit var turnTextView: TextView
 
     // TODO: Remove; for debug only
@@ -75,15 +70,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        moveEditText = findViewById(R.id.moveEditText)
-        moveSubmitButton = findViewById(R.id.moveSubmitButton)
-        moveSubmitButton.setOnClickListener {
-            game.moveOld(moveEditText.text.toString())
-            if (game.turn == Player.BLACK)
-                turnTextView.text = getString(R.string.turn_black)
-            else turnTextView.text = getString(R.string.turn_white)
-        }
-
         game.board.onSet = { position: Position, piece: ChessPiece ->
             if (position.valid) {
                 val view = boardViewArray[position.rank - 1][position.file.index]
@@ -91,13 +77,20 @@ class MainActivity : AppCompatActivity() {
                 setColor(view, piece.player)
             }
         }
+
+        game.onTurnChangedListener = {
+            if (game.turn == Player.BLACK)
+                turnTextView.text = getString(R.string.turn_black)
+            else turnTextView.text = getString(R.string.turn_white)
+        }
     }
 
     private fun setColor(tv: TextView, player: Player) {
-        if (player == Player.WHITE)
-            tv.setTextColor(getColor(R.color.white))
-        else if (player == Player.BLACK)
-            tv.setTextColor(getColor(R.color.black))
+        when (player) {
+            Player.WHITE -> tv.setTextColor(getColor(R.color.white))
+            Player.BLACK -> tv.setTextColor(getColor(R.color.black))
+            else -> tv.setTextColor(getColor(R.color.transparent))
+        }
     }
 
     private fun getView(position: Position): TextView? {

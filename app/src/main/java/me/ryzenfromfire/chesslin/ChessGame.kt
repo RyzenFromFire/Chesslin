@@ -10,12 +10,14 @@ class ChessGame {
     val moves = mutableListOf<ChessMove>()
     var selection = Position.NULL // Don't modify directly outside of this file
     var lastSelection = Position.NULL
-    var pieceSelected = false
+    var isPieceSelected = false
     var inCheck: Player = Player.NONE
     var gameOver: Boolean = false
     var currentMove = 1
     lateinit var winner: Player
-    lateinit var lastMove: ChessMove // TODO: Implement
+    var lastMove: ChessMove = ChessMove.NULL // TODO: Implement
+
+    var onTurnChangedListener: (() -> Unit)? = null
 
     enum class Player(val str: String) {
         NONE("None"),
@@ -24,39 +26,48 @@ class ChessGame {
     }
 
     fun select(position: Position) {
-        val lastPieceSelected = pieceSelected
+        val lastIsPieceSelected = isPieceSelected
 
         // TODO: Consider refactoring to a local variable. Would also have to make lastPieceSelected basically duplicate this initialization with lastSelection.
-        // if the player whose turn it currently is has a piece at the targeted position
-        pieceSelected = (position.valid) && (board.get(position).type != PieceType.NONE) && (board.get(position).player == turn)
+        // if there is a piece at the targeted position
+        isPieceSelected = (position.valid) && (board.get(position).type != PieceType.NONE)
 
         // select the passed position if it is valid
         selection = if (position.valid) position else { Position.NULL }
 
+        val selectedPiece = board.get(selection)
+        val lastSelectedPiece = board.get(lastSelection)
+
         // if we have just selected a piece, and one was not already selected
-        if (pieceSelected && !lastPieceSelected) {
+        if (isPieceSelected && !lastIsPieceSelected) {
             // determine available moves
             // using listener similar to ChessBoard, update MainActivity with list of movable positions to display indicators
         }
+        // at this point, `selection` and `isPieceSelected` refer to the target position of the move and if there is a piece there
         // otherwise, if we have selected a piece last time this function was called, and we just selected a new position, make a move
         // note that `position.valid` is functionally identical to `selection != Position.NULL`, since Position.NULL is automatically invalid
-        else if (lastPieceSelected && lastSelection != Position.NULL && position.valid) {
+        // also, if the selected piece is of the same player whose turn it is, don't move because you can't move onto your own piece.
+        else if (
+            lastIsPieceSelected && lastSelection != Position.NULL &&
+            position.valid && lastSelection != selection &&
+            selectedPiece.player != turn
+        ) {
             val promotion = PieceType.NONE // TODO: Implement promotion logic if pawn reaches back rank
             val castle = false // TODO: Implement castling logic using ChessMove.castleValid(). This might be better suited to the previous if statement and/or class property
             val move = ChessMove(
                 game = this,
                 num = currentMove,
-                piece = board.get(lastSelection),
+                piece = lastSelectedPiece,
                 start = lastSelection,
                 end = selection,
-                capture = if (pieceSelected) board.get(selection) else ChessPiece.NULL,
+                capture = if (isPieceSelected) selectedPiece else ChessPiece.NULL,
                 promotion = promotion,
                 castle = castle
             )
 
             move(move)
             selection = Position.NULL
-            pieceSelected = false
+            isPieceSelected = false
         }
 
         // this will update lastSelection appropriately, including setting it to Position.NULL if a move was made
@@ -70,6 +81,7 @@ class ChessGame {
         // TODO: add functionality to keep track of pieces captured by each player
         moves.add(move)
         currentMove++
+        switchTurn()
         return true
     }
 
@@ -136,5 +148,6 @@ class ChessGame {
         } else if (turn == Player.BLACK) {
             turn = Player.WHITE
         }
+        onTurnChangedListener?.invoke()
     }
 }

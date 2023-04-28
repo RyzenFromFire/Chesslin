@@ -8,7 +8,7 @@ import me.ryzenfromfire.chesslin.ChessGame.Player
 import me.ryzenfromfire.chesslin.ChessGame.Player.*
 
 class ChessMove(
-    val game: ChessGame,
+    val game: ChessGame?,
     val num: Int,
     val piece: ChessPiece,
     val start: Position,
@@ -22,52 +22,46 @@ class ChessMove(
     private var notation: String = ""
 
     init {
-        if (!start.valid || !end.valid) valid = false
+        if (game == null) valid = false else {
+            if (!start.valid || !end.valid) valid = false
 
-        // Check if moves have gone out of sync
-        if (num % 2 == 0 && piece.player != BLACK) {
-            valid = false
-        }
-
-        // TODO: Implement checking for if the player whose turn it is is in check, and limit moves appropriately
-        // TODO: probably implement another checking function in the companion object to do this
-
-        // TODO: look at the game state to determine if the move leads to a check, and update game.inCheck appropriately
-
-        // Game End Notation
-        if (game.gameOver) {
-            notation = when (game.winner) {
-                WHITE -> "1-0"
-                BLACK -> "0-1"
-                Player.NONE -> "½-½"
+            // Check if moves have gone out of sync
+            if (num % 2 == 0 && piece.player != BLACK) {
+                valid = false
             }
-        }
 
-        // Castling Logic and Notation
-        if (castle) {
-            if (castleValid(piece = piece, start = start, end = end)) {
-                when (end.file) {
-                    B -> notation = "${num}. O-O-O"
-                    G -> notation = "${num}. O-O"
-                    else -> valid = false // should be unreachable
+            // TODO: Implement checking for if the player whose turn it is is in check, and limit moves appropriately
+            // TODO: probably implement another checking function in the companion object to do this
+
+            // TODO: look at the game state to determine if the move leads to a check, and update game.inCheck appropriately
+
+            // Game End Notation
+            if (game.gameOver) {
+                notation = when (game.winner) {
+                    WHITE -> "1-0"
+                    BLACK -> "0-1"
+                    Player.NONE -> "½-½"
                 }
-            } else valid = false
-        }
+            }
 
-        // En Passant Logic
-        if (piece.type == PAWN && // If this piece is a pawn
-            this.capture.type == PAWN && // If the piece captured is a pawn
-            game.lastMove.piece.type != PAWN && // If the last piece moved was NOT a pawn
-            game.lastMove.end.rank != this.end.rank
-        ) {
-            // Then if the location where the last move ended
-            // and the place where this move is capturing
-            // are not the same, then the move is not valid.
-            valid = false
+            // Castling Logic and Notation
+            if (castle) {
+                if (castleValid(piece = piece, start = start, end = end)) {
+                    when (end.file) {
+                        B -> notation = "${num}. O-O-O"
+                        G -> notation = "${num}. O-O"
+                        else -> valid = false // should be unreachable
+                    }
+                } else valid = false
+            }
+
+            // TODO: Invalidate move if it is not possible for the piece
         }
     }
 
     companion object {
+        val NULL = ChessMove(null, -1, ChessPiece.NULL, Position.NULL, Position.NULL)
+
         fun castleValid(piece: ChessPiece, start: Position, end: Position): Boolean {
             return (
                 start.rank == end.rank &&
@@ -78,11 +72,14 @@ class ChessMove(
             )
         }
 
-        fun getEnPassantPosition(piece: ChessPiece, pos: Position, lastMove: ChessMove): Position {
+        fun getEnPassantTarget(piece: ChessPiece, pos: Position, lastMove: ChessMove): Position {
             val file = pos.file
             val rank = pos.rank
 
-            if (!lastMove.valid || lastMove.piece.type != PAWN) return Position.NULL
+            if (piece.type != PAWN ||
+                !lastMove.valid ||
+                lastMove.piece.type != PAWN
+            ) return Position.NULL
 
             // Check left side
             if ((piece.player == WHITE && file != A) || (piece.player == BLACK && file != H)) {

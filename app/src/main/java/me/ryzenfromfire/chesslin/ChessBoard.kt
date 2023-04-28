@@ -92,9 +92,11 @@ class ChessBoard {
     fun set(posStr: String) = set(Position(posStr))
 
     fun get(position: Position): ChessPiece {
-        val fileIdx = position.file.index
-        val rank0 = position.rank - 1
-        return boardArray[rank0][fileIdx]
+        return if (position.valid) {
+            val fileIdx = position.file.index
+            val rank0 = position.rank - 1
+            boardArray[rank0][fileIdx]
+        } else ChessPiece.NULL
     }
 
     fun get(posStr: String): ChessPiece = get(Position(posStr))
