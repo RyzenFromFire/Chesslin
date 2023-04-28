@@ -1,10 +1,14 @@
 package me.ryzenfromfire.chesslin
 
+import android.graphics.Typeface
 import android.os.Bundle
 import android.view.Gravity
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.content.ContextCompat
 import androidx.gridlayout.widget.GridLayout
+import com.google.android.material.shape.MaterialShapeDrawable
 import me.ryzenfromfire.chesslin.ChessBoard.Companion.NUM_RANKS_FILES
 import me.ryzenfromfire.chesslin.ChessGame.Player
 import me.ryzenfromfire.chesslin.ChessBoard.Position
@@ -48,7 +52,10 @@ class MainActivity : AppCompatActivity() {
                 val pos = Position(file = File[file], rank = rank)
                 tv = TextView(this)
                 tv.text = game.board.get(pos).type.str
-                tv.gravity = Gravity.CENTER // Center the text in the square
+//                tv.gravity = Gravity.CENTER // Center the text in the square
+                tv.gravity = Gravity.FILL
+                tv.textAlignment = TextView.TEXT_ALIGNMENT_CENTER
+                tv.typeface = Typeface.MONOSPACE // https://stackoverflow.com/questions/12128331/how-to-change-fontfamily-of-textview-in-android
                 tv.setOnClickListener {
                     game.select(pos)
                     debugTextView.text = "selected $pos" // TODO: Debug; remove
@@ -57,13 +64,20 @@ class MainActivity : AppCompatActivity() {
                 // boardViewArray[rank - 1][file] = tv
                 setView(pos, tv)
 
+                // Border for debugging
+                // https://stackoverflow.com/a/62720394
+//                val shapeDrawable = MaterialShapeDrawable()
+//                shapeDrawable.fillColor = ContextCompat.getColorStateList(this,android.R.color.transparent)
+//                shapeDrawable.setStroke(1.0f, ContextCompat.getColor(this,R.color.black))
+//                tv.background = shapeDrawable
+
                 // Create the row and column specifications
                 // 'start' = UNDEFINED, that's fine.
                 // 'size' = 1 always, since we aren't using >1 cell for each square.
                 // 'alignment' = FILL since we want to distribute the cells evenly over the grid.
                 // 'weight' = 1 is needed to determine the aforementioned distribution.
-                val rowSpan: GridLayout.Spec? = GridLayout.spec(GridLayout.UNDEFINED, 1, GridLayout.FILL, 1F)
-                val colSpan: GridLayout.Spec? = GridLayout.spec(GridLayout.UNDEFINED, 1, GridLayout.FILL, 1F)
+                val rowSpan = GridLayout.spec(GridLayout.UNDEFINED, 1, GridLayout.FILL, 1F)
+                val colSpan = GridLayout.spec(GridLayout.UNDEFINED, 1, GridLayout.FILL, 1F)
                 val params = GridLayout.LayoutParams(rowSpan, colSpan)
                 params.setGravity(Gravity.FILL) // Make the view take the entire grid square
                 boardGridLayout.addView(tv, params)

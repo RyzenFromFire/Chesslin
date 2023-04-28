@@ -12,7 +12,7 @@ class ChessPiece(var type: PieceType = PieceType.NONE, val player: Player = Play
     var hasJustMoved = false
 
     enum class PieceType(val str: String, val fullStr: String, val points: Int) {
-        NONE("", "", 0),
+        NONE("_", "", 0),
         PAWN("P", "Pawn", 1),
         KNIGHT("N", "Knight", 3),
         BISHOP("B", "Bishop", 3),
