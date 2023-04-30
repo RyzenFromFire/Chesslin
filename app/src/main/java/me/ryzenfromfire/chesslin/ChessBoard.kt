@@ -1,5 +1,6 @@
 package me.ryzenfromfire.chesslin
 
+import android.util.Log
 import me.ryzenfromfire.chesslin.ChessPiece.PieceType.*
 import me.ryzenfromfire.chesslin.ChessPiece.PieceType
 import me.ryzenfromfire.chesslin.ChessGame.Player.*
@@ -33,7 +34,14 @@ class ChessBoard {
             private val fileMap = File.values().associateBy { it.str }
             fun parse(file: Char) = fileMap[file.toString()] ?: A
             val fileNames = Array(NUM_RANKS_FILES) { File.values()[it].str[0] }
-            operator fun get(index: Int) = File.values()[index]
+            operator fun get(index: Int): File {
+                return if (index in File.values().indices) {
+                    File.values()[index]
+                } else {
+                    Log.e("ChessBoard.File", "Invalid file conversion with index $index")
+                    A
+                }
+            }
         }
     }
 
