@@ -55,6 +55,7 @@ class MainActivity : AppCompatActivity() {
 //                tv.gravity = Gravity.CENTER // Center the text in the square
                 tv.gravity = Gravity.FILL
                 tv.textAlignment = TextView.TEXT_ALIGNMENT_CENTER
+                tv.textSize = 24F
                 tv.typeface = Typeface.MONOSPACE // https://stackoverflow.com/questions/12128331/how-to-change-fontfamily-of-textview-in-android
                 tv.setOnClickListener {
                     game.select(pos)
