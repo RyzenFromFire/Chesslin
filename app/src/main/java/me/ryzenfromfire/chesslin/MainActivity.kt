@@ -128,7 +128,7 @@ class MainActivity : AppCompatActivity() {
                     }
                     true
                 }
-                
+
                 setColor(tv, game.board.get(pos).player)
                 setView(pos, tv)
 
