@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
+import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -28,6 +29,7 @@ class MainActivity : AppCompatActivity() {
 
     // TODO: Remove; for debug only
     private lateinit var debugTextView: TextView
+    private lateinit var resetButton: Button
 
     private var followerView: TextView? = null
     private val followerShadowScalar = 1.5
@@ -164,6 +166,12 @@ class MainActivity : AppCompatActivity() {
             if (game.turn == Player.BLACK)
                 turnTextView.text = getString(R.string.turn_black)
             else turnTextView.text = getString(R.string.turn_white)
+        }
+
+        // For Debug
+        resetButton = findViewById(R.id.resetButton)
+        resetButton.setOnClickListener {
+            this.recreate()
         }
     }
 
