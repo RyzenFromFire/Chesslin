@@ -29,13 +29,13 @@ class ChessPiece(var type: PieceType = PieceType.NONE, val player: Player = Play
         }
     }
 
-    // TODO: Implement move checking
+    // TODO: Implement move checking (in progress)
     // TODO: Can check if a move is blocked by checking game.board.get(position)
     /**
-     * Returns a list of positions that can be potentially be reached by this piece,
-     * without considering obstructions or limitations due to checks or pins.
+     * Returns a list of positions that can be legally be reached by the piece at the specified position.
+     * @param checkLegality: default true, set false to ignore legality of moves considered, and only consider if the move is possible.
      */
-    fun getMovablePositions(game: ChessGame, position: Position): MutableList<Position> {
+    fun getMovablePositions(game: ChessGame, position: Position, checkLegality: Boolean = true): MutableList<Position> {
         return when (this.type) {
             PieceType.PAWN -> getPawnPositions(game, position)
             PieceType.ROOK -> getRookPositions(game, position)
@@ -102,16 +102,26 @@ class ChessPiece(var type: PieceType = PieceType.NONE, val player: Player = Play
     companion object {
         val NULL = ChessPiece()
 
+        /**
+         * Determine the direction which a piece (realistically, a pawn)
+         * of a given color will move based on the specified player (color).
+         * @return a scalar (+1 or -1) for white or black respectively.
+         * Avoid usage with Player.NONE (returns 0) - this could yield unexpected results.
+         */
         fun getRankDirection(player: Player): Int {
-            return when (player) { // only matters for pawns
+            return when (player) {
                 Player.WHITE -> +1
                 Player.BLACK -> -1
                 else -> 0
             }
         }
 
+        /**
+         * Generates a list of possible pawn moves from the specified position based on the current game state.
+         * Pawns can move forward one square, forward two squares on first move, or diagonally if capturing (including en passant).
+         * @param checkLegality: default true, set false to ignore legality of moves considered.
+         */
         fun getPawnPositions(game: ChessGame, position: Position, checkLegality: Boolean = true) : MutableList<Position> {
-            // Pawn can move forward one square, forward two squares on first move, or diagonally if capturing (including en passant)
             val positions = PositionList(game, position)
 
             // Forward one square
@@ -142,11 +152,13 @@ class ChessPiece(var type: PieceType = PieceType.NONE, val player: Player = Play
         }
 
         fun getRookPositions(game: ChessGame, position: Position, checkLegality: Boolean = true) : MutableList<Position> {
-            return mutableListOf<Position>() // TODO: Implement
+            // TODO: Implement, similar to ChessGame.doLinearCheck
+            return mutableListOf<Position>()
         }
 
         fun getBishopPositions(game: ChessGame, position: Position, checkLegality: Boolean = true) : MutableList<Position> {
-            return mutableListOf<Position>() // TODO: Implement
+            // TODO: Implement, similar to ChessGame.doLinearCheck
+            return mutableListOf<Position>()
         }
 
         fun getKnightPositions(game: ChessGame, position: Position, checkLegality: Boolean = true) : MutableList<Position> {
@@ -163,7 +175,8 @@ class ChessPiece(var type: PieceType = PieceType.NONE, val player: Player = Play
         }
 
         fun getKingPositions(game: ChessGame, position: Position, checkLegality: Boolean = true) : MutableList<Position> {
-            return mutableListOf<Position>() // TODO: Implement
+            // TODO: Implement, easy static list of positions like Knight
+            return mutableListOf<Position>()
         }
 
         fun getQueenPositions(game: ChessGame, position: Position, checkLegality: Boolean = true) : MutableList<Position> {

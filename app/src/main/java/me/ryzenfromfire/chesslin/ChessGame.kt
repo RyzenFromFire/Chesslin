@@ -42,6 +42,8 @@ class ChessGame {
      * Returns true if a valid piece of the player whose turn it is was selected, and false otherwise.
      */
     fun select(pos: Position): Boolean {
+        // TODO: Implement checking for move (end position) *legality*, not just position validity
+        // TODO: (after above) give feedback to MainActivity (through a listener?) about legal positions to move, so it can highlight them in the View
         val lastIsPieceSelected = isPieceSelected
 
         this.position = if (pos.valid) pos else Position.NULL
@@ -97,7 +99,7 @@ class ChessGame {
      * Helper function to perform an actual move of a chess piece given a ChessMove instance.
      */
     private fun move(move: ChessMove): Boolean {
-        if (!move.valid) return false
+        if (!move.valid) return false // TODO: Also check for legality.
         board.set(position = move.end, piece = move.piece)
         board.set(position = move.start, piece = ChessPiece.NULL)
         // TODO: add functionality to keep track of pieces captured by each player
@@ -191,6 +193,7 @@ class ChessGame {
         var result = false
         val moveEndPiece = board.get(move.end)
         // make appropriate changes to board temporarily without affecting game state
+        // this function is effectively a modified version of move()
         if (!move.valid) return false
         board.set(position = move.end, piece = move.piece, callOnSetListener = false)
         board.set(position = move.start, piece = ChessPiece.NULL, callOnSetListener = false)
