@@ -71,16 +71,6 @@ class MainActivity : AppCompatActivity() {
                 // Create view using helper function
                 tv = createChessPieceView(game.board.get(pos))
 
-//                tv.setOnClickListener {
-//                    print("onclick listener called, followerPieceView is ")
-//                    // If not dragging
-//                    if (followerPieceView == null) {
-//                        println("null")
-//                        game.select(pos)
-//                        debugTextView.text = "selected $pos" // TODO: Debug; remove
-//                    } else println("not null")
-//                }
-
                 tv.setOnTouchListener { v, event ->
                     val piece = game.board.get(pos)
                     when (event.action) {

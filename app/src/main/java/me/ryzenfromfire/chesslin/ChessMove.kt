@@ -25,8 +25,8 @@ class ChessMove(
         if (game == null) valid = false else {
             if (!start.valid || !end.valid) valid = false
 
-            // Check if moves have gone out of sync
-            if (num % 2 == 0 && piece.player != BLACK) {
+            // Check if moves have gone out of sync (unless it is a testing move)
+            if (num % 2 == 0 && piece.player != BLACK && num != NUM_TEST_MOVE) {
                 valid = false
             }
 
@@ -61,37 +61,45 @@ class ChessMove(
 
     companion object {
         val NULL = ChessMove(null, -1, ChessPiece.NULL, Position.NULL, Position.NULL)
+        val NUM_TEST_MOVE = -2
 
+        // The following functions consider multiple pieces in the context of a ChessMove, so they are not in the ChessPiece class
+
+        /**
+         * Determines if a castling move is valid given the start and end positions
+         * alongside a reference to the piece (assumed to be a king)
+         */
         fun castleValid(piece: ChessPiece, start: Position, end: Position): Boolean {
             return (
                 start.rank == end.rank &&
                 piece.type == KING &&
+                !piece.hasMoved &&
                 start.file == E &&
                 (end.file == B || end.file == G) &&
                 ((start.rank == 1 && piece.player == WHITE) || (start.rank == 8 && piece.player == BLACK))
             )
         }
 
-        fun getEnPassantTarget(piece: ChessPiece, pos: Position, lastMove: ChessMove): Position {
-            val file = pos.file
-            val rank = pos.rank
-
-            if (piece.type != PAWN ||
-                !lastMove.valid ||
-                lastMove.piece.type != PAWN
+        /**
+         * Given a Position (at which it is assumed there is a pawn)
+         * and the game (from which the last move is retrieved),
+         * return the target Position if en passant is possible.
+         */
+        fun getEnPassantTarget(game: ChessGame, pos: Position): Position {
+            // Return null if pieces are not pawns or last move is invalid
+            if (game.board.get(pos).type != PAWN ||
+                !game.lastMove.valid ||
+                game.lastMove.piece.type != PAWN
             ) return Position.NULL
 
-            // Check left side
-            if ((piece.player == WHITE && file != A) || (piece.player == BLACK && file != H)) {
-
+            // Return appropriate position based on if the last move ended to the left or right
+            val left = game.board.getRelativePosition(pos, -1, 0)
+            val right = game.board.getRelativePosition(pos, 1, 0)
+            return when (game.lastMove.end) {
+                left -> game.board.getRelativePosition(pos, -1, 1)
+                right -> game.board.getRelativePosition(pos, 1, 1)
+                else -> Position.NULL
             }
-
-            // Check right side
-            if ((piece.player == BLACK && file != A) || (piece.player == WHITE && file != H)) {
-
-            }
-
-            return Position.NULL
         }
     }
 

@@ -1,6 +1,8 @@
 package me.ryzenfromfire.chesslin
 
+import android.util.Log
 import me.ryzenfromfire.chesslin.ChessPiece.PieceType
+import me.ryzenfromfire.chesslin.ChessPiece.PieceType.*
 import me.ryzenfromfire.chesslin.ChessBoard.File.Companion.fileNames
 import me.ryzenfromfire.chesslin.ChessBoard.Position
 
@@ -16,13 +18,23 @@ class ChessGame {
     var currentMove = 1
     lateinit var winner: Player
     var lastMove: ChessMove = ChessMove.NULL // TODO: Implement
+    private var whiteKingPos = Position("e1")
+    private var blackKingPos = Position("e8")
 
     var onTurnChangedListener: (() -> Unit)? = null
 
     enum class Player(val str: String) {
         NONE("None"),
         WHITE("White"),
-        BLACK("Black")
+        BLACK("Black");
+
+        fun opponent(): Player {
+            return when (this) {
+                WHITE -> BLACK
+                BLACK -> WHITE
+                else -> NONE
+            }
+        }
     }
 
     /**
@@ -92,6 +104,13 @@ class ChessGame {
         moves.add(move)
         currentMove++
         switchTurn()
+        if (move.piece.type == KING) {
+            when (move.piece.player) {
+                Player.WHITE -> whiteKingPos = move.end
+                Player.BLACK -> blackKingPos = move.end
+                else -> Log.e("ChessGame", "Movement Error: non-player king movement detected")
+            }
+        }
         return true
     }
 
@@ -162,5 +181,134 @@ class ChessGame {
             turn = Player.WHITE
         }
         onTurnChangedListener?.invoke()
+    }
+
+    /**
+     * Returns true iff. the move specified for the player in question
+     * results in a check on that player's king, given the current game state.
+     */
+    fun isCheckedAfterMove(player: Player, move: ChessMove): Boolean {
+        var result = false
+        val moveEndPiece = board.get(move.end)
+        // make appropriate changes to board temporarily without affecting game state
+        if (!move.valid) return false
+        board.set(position = move.end, piece = move.piece, callOnSetListener = false)
+        board.set(position = move.start, piece = ChessPiece.NULL, callOnSetListener = false)
+
+        // test if specified player's king is in check; store result
+        val kingPos = when (player) {
+            Player.WHITE -> whiteKingPos
+            Player.BLACK -> blackKingPos
+            else -> Position.NULL
+        }
+        result = isKingInCheck(player, kingPos)
+
+        // revert changes
+        board.set(position = move.end, piece = moveEndPiece, callOnSetListener = false)
+        board.set(position = move.start, piece = move.piece, callOnSetListener = false)
+        return result
+    }
+
+    /**
+     * Tests if the specified player's king, at the given position, is currently in check.
+     */
+    private fun isKingInCheck(player: Player, kingPos: Position): Boolean {
+        if (player == Player.NONE) return false
+        var piece: ChessPiece
+
+        // Test if a pawn could check the king
+        val pawnPositions = mutableListOf<Position>()
+        val rankDirection: Int = when (player) {
+            Player.BLACK -> -1
+            else -> 1 // when Player.WHITE, since Player.NONE will return by now
+        }
+
+        pawnPositions.add(board.getRelativePosition(kingPos, -1, rankDirection))
+        pawnPositions.add(board.getRelativePosition(kingPos, 1, rankDirection))
+        for (pos in pawnPositions) {
+            piece = board.get(pos)
+            // If a pawn belonging to the opponent is in the position, return true
+            if (piece.player == player.opponent() && piece.type == PAWN) return true
+        }
+
+        // Test all eight possible spots a knight could check from
+        val knightPositions = ChessPiece.getKnightPositions(this, kingPos, false)
+        for (pos in knightPositions) {
+            piece = board.get(pos)
+
+            // If a knight belonging to the opponent is in the position, return true
+            if (piece.player == player.opponent() && piece.type == KNIGHT) return true
+        }
+
+        // Test each of four linear directions sequentially for rook/queen check,
+        // but stop if we encounter a piece blocking the check
+        var check = false
+
+        // Test upwards
+        check = doLinearCheck(player, kingPos, 0, 1, ROOK)
+        if (check) return true
+
+        // Test downwards
+        check = doLinearCheck(player, kingPos, 0, -1, ROOK)
+        if (check) return true
+
+        // Test right
+        check = doLinearCheck(player, kingPos, 1, 0, ROOK)
+        if (check) return true
+
+        // Test left
+        check = doLinearCheck(player, kingPos, -1, 0, ROOK)
+        if (check) return true
+
+
+        // Test each of the four diagonal directions sequentially for a bishop/queen check similarly
+
+        // Test up and right
+        check = doLinearCheck(player, kingPos, 1, 1, BISHOP)
+        if (check) return true
+
+        // Test up and left
+        check = doLinearCheck(player, kingPos, -1, 1, BISHOP)
+        if (check) return true
+
+        // Test down and left
+        check = doLinearCheck(player, kingPos, -1, -1, BISHOP)
+        if (check) return true
+
+        // Test down and right
+        check = doLinearCheck(player, kingPos, 1, -1, BISHOP)
+        if (check) return true
+
+        return false
+    }
+
+    /**
+     * Check in a line of positions emanating from the specified starting position
+     * for an opposing piece capable of delivering check. If one is found, return true.
+     * If a piece is found that is incapable of delivering check, or is owned by the
+     * specified player, return false, as that piece is blocking any potential checks.
+     */
+    private fun doLinearCheck(
+        player: Player,
+        position: Position,
+        rightOffsetScalar: Int,
+        upOffsetScalar: Int,
+        pieceType: PieceType = ROOK
+    ): Boolean {
+        var pos: Position
+        var piece: ChessPiece
+        var i = 1
+        do {
+            pos = board.getRelativePosition(position = position, rightOffset = rightOffsetScalar * i, upOffset = upOffsetScalar * i)
+            piece = board.get(pos)
+            if (piece.player != Player.NONE)
+                if (pieceType == ROOK) {
+                    return piece.player == player.opponent() && (piece.type == ROOK || piece.type == QUEEN)
+                } else if (pieceType == BISHOP) {
+                    return piece.player == player.opponent() && (piece.type == BISHOP || piece.type == QUEEN)
+                }
+            i++
+        } while (pos.valid)
+        return false
     }
 }

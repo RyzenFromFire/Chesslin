@@ -35,14 +35,14 @@ class ChessPiece(var type: PieceType = PieceType.NONE, val player: Player = Play
      * Returns a list of positions that can be potentially be reached by this piece,
      * without considering obstructions or limitations due to checks or pins.
      */
-    fun getMovablePositions(game: ChessGame): MutableList<Position> {
+    fun getMovablePositions(game: ChessGame, position: Position): MutableList<Position> {
         return when (this.type) {
-            PieceType.PAWN -> getPawnPositions(game)
-            PieceType.ROOK -> getRookPositions(game)
-            PieceType.BISHOP -> getBishopPositions(game)
-            PieceType.KNIGHT -> getKnightPositions(game)
-            PieceType.QUEEN -> getQueenPositions(game)
-            PieceType.KING -> getKingPositions(game)
+            PieceType.PAWN -> getPawnPositions(game, position)
+            PieceType.ROOK -> getRookPositions(game, position)
+            PieceType.BISHOP -> getBishopPositions(game, position)
+            PieceType.KNIGHT -> getKnightPositions(game, position)
+            PieceType.QUEEN -> getQueenPositions(game, position)
+            PieceType.KING -> getKingPositions(game, position)
             else -> mutableListOf<Position>()
         }
     }
@@ -62,33 +62,113 @@ class ChessPiece(var type: PieceType = PieceType.NONE, val player: Player = Play
         return true
     }
 
-    // Global/static methods for checking positions given a game state
+    // TODO: Consider refactoring PositionList and all the lists to MutableSet
+    class PositionList(private val game: ChessGame, val startingPosition: Position) : ArrayList<Position>() {
+        /**
+         * Generates a simple move from this class instance's game, starting position, and the specified ending position.
+         */
+        private fun getMove(endPos: Position): ChessMove {
+            return ChessMove(
+                game = game,
+                num = ChessMove.NUM_TEST_MOVE,
+                piece = game.board.get(startingPosition),
+                start = startingPosition,
+                end = endPos,
+                capture = if (game.board.get(endPos) != ChessPiece.NULL) game.board.get(endPos) else ChessPiece.NULL,
+                promotion = PieceType.NONE,
+                castle = false
+            )
+        }
+        fun addIfLegal(rightOffset: Int, upOffset: Int, checkLegality: Boolean = true) {
+            val pos = game.board.getRelativePosition(startingPosition, rightOffset, upOffset)
+            addIfLegal(pos, checkLegality)
+        }
+
+        fun addIfLegal(pos: Position, checkLegality: Boolean = true) {
+            if (pos.valid) {
+                if (!checkLegality) {
+                    this.add(pos)
+                } else if (
+                    !game.board.isOccupied(pos) &&
+                    !game.isCheckedAfterMove(game.board.get(startingPosition).player, getMove(pos))
+                ) {
+                    this.add(pos)
+                }
+            }
+        }
+    }
+
+    // Global/static methods for checking positions for the next move of a piece, given a game state
     companion object {
         val NULL = ChessPiece()
-        private fun getPawnPositions(game: ChessGame) : MutableList<Position> {
-            // TODO: Can check if en passant is valid by creating a prototype ChessMove to each side and checking if it is valid
+
+        fun getRankDirection(player: Player): Int {
+            return when (player) { // only matters for pawns
+                Player.WHITE -> +1
+                Player.BLACK -> -1
+                else -> 0
+            }
+        }
+
+        fun getPawnPositions(game: ChessGame, position: Position, checkLegality: Boolean = true) : MutableList<Position> {
+            // Pawn can move forward one square, forward two squares on first move, or diagonally if capturing (including en passant)
+            val positions = PositionList(game, position)
+
+            // Forward one square
+            positions.addIfLegal(0, +1, checkLegality)
+
+            // Add initial 2-square move if the pawn has not yet moved
+            if (!game.board.get(position).hasMoved)
+                positions.addIfLegal(0, +2, checkLegality)
+
+            // Add capturing positions if there is an opposing piece to the left or right (forward and diagonally)
+            val player = game.board.get(position).player
+            val tempList = listOf(
+                game.board.getRelativePosition(position, +1, getRankDirection(player)),
+                game.board.getRelativePosition(position, -1, getRankDirection(player))
+            )
+            for (pos in tempList) {
+                if (game.board.get(pos).player == game.board.get(position).player.opponent()) {
+                    positions.addIfLegal(pos)
+                }
+            }
+
+            // Add en passant target position if available
+            val enPassantTarget: Position = ChessMove.getEnPassantTarget(game, position)
+            if (enPassantTarget != Position.NULL)
+                positions.addIfLegal(enPassantTarget)
+
+            return positions
+        }
+
+        fun getRookPositions(game: ChessGame, position: Position, checkLegality: Boolean = true) : MutableList<Position> {
             return mutableListOf<Position>() // TODO: Implement
         }
 
-        private fun getRookPositions(game: ChessGame) : MutableList<Position> {
+        fun getBishopPositions(game: ChessGame, position: Position, checkLegality: Boolean = true) : MutableList<Position> {
             return mutableListOf<Position>() // TODO: Implement
         }
 
-        private fun getBishopPositions(game: ChessGame) : MutableList<Position> {
+        fun getKnightPositions(game: ChessGame, position: Position, checkLegality: Boolean = true) : MutableList<Position> {
+            val positions = PositionList(game, position)
+            positions.addIfLegal(+1, +2, checkLegality)
+            positions.addIfLegal(+2, +1, checkLegality)
+            positions.addIfLegal(+2, +1, checkLegality)
+            positions.addIfLegal(+1, -2, checkLegality)
+            positions.addIfLegal(-1, -2, checkLegality)
+            positions.addIfLegal(-2, -1, checkLegality)
+            positions.addIfLegal(-2, +1, checkLegality)
+            positions.addIfLegal(-1, +2, checkLegality)
+            return positions
+        }
+
+        fun getKingPositions(game: ChessGame, position: Position, checkLegality: Boolean = true) : MutableList<Position> {
             return mutableListOf<Position>() // TODO: Implement
         }
 
-        private fun getKnightPositions(game: ChessGame) : MutableList<Position> {
-            return mutableListOf<Position>() // TODO: Implement
-        }
-
-        private fun getKingPositions(game: ChessGame) : MutableList<Position> {
-            return mutableListOf<Position>() // TODO: Implement
-        }
-
-        private fun getQueenPositions(game: ChessGame) : MutableList<Position> {
-            val positions = getRookPositions(game)
-            positions.addAll(getBishopPositions(game))
+        fun getQueenPositions(game: ChessGame, position: Position, checkLegality: Boolean = true) : MutableList<Position> {
+            val positions = getRookPositions(game, position)
+            positions.addAll(getBishopPositions(game, position))
             return positions
         }
     }

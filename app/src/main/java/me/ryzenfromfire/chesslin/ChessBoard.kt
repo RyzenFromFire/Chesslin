@@ -34,12 +34,12 @@ class ChessBoard {
             private val fileMap = File.values().associateBy { it.str }
             fun parse(file: Char) = fileMap[file.toString()] ?: A
             val fileNames = Array(NUM_RANKS_FILES) { File.values()[it].str[0] }
-            operator fun get(index: Int): File {
+            operator fun get(index: Int): File? {
                 return if (index in File.values().indices) {
                     File.values()[index]
                 } else {
                     Log.e("ChessBoard.File", "Invalid file conversion with index $index")
-                    A
+                    null
                 }
             }
         }
@@ -81,12 +81,12 @@ class ChessBoard {
 
     init { reset() }
 
-    fun set(position: Position, piece: ChessPiece): Boolean {
+    fun set(position: Position, piece: ChessPiece, callOnSetListener: Boolean = true): Boolean {
         return if (position.valid) {
             val fileIdx = position.file.index
             val rank0 = position.rank - 1
             boardArray[rank0][fileIdx] = piece
-            onSet?.invoke(position, piece)
+            if (callOnSetListener) onSet?.invoke(position, piece)
             true
         } else false
     }
@@ -146,5 +146,29 @@ class ChessBoard {
         set("f8", BLACK, BISHOP)
         set("g8", BLACK, KNIGHT)
         set("h8", BLACK, ROOK)
+    }
+
+    /**
+     * Returns true if the specified Position contains a piece.
+     * If `player` is not Player.NONE, only returns true if
+     * the piece in the specified Position is owned by `player`.
+     */
+    fun isOccupied(position: Position, player: Player = Player.NONE): Boolean {
+        return if (player != Player.NONE)
+            get(position).player == player
+        else
+            get(position).player != Player.NONE
+    }
+
+    /**
+     * Returns a position relative to the specified position.
+     * @param rightOffset positive for increasing file from A..H, and vice versa
+     * @param upOffset positive for increasing rank from 1..9, and vice versa
+     */
+    fun getRelativePosition(position: Position, rightOffset: Int, upOffset: Int): Position {
+        val rank: Int = position.rank + rightOffset
+        val file: File = File[position.file.index + upOffset] ?: return Position.NULL
+        val newPos = Position(rank = rank, file = file)
+        return if (newPos.valid) newPos else Position.NULL
     }
 }
