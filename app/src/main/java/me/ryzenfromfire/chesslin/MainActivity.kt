@@ -66,7 +66,7 @@ class MainActivity : AppCompatActivity() {
         // so the positions are added to the grid layout in the correct order
         for (rank in NUM_RANKS_FILES downTo 1) {
             for (file in 0 until NUM_RANKS_FILES) {
-                val pos = Position(file = File[file], rank = rank)
+                val pos = Position(file = File[file]!!, rank = rank)
 
                 // Create view using helper function
                 tv = createChessPieceView(game.board.get(pos))
@@ -245,6 +245,6 @@ class MainActivity : AppCompatActivity() {
 
         if (newFileIdx !in File.values().indices) return Position.NULL
 
-        return Position(rank = newRank, file = File[newFileIdx])
+        return Position(rank = newRank, file = File[newFileIdx]!!)
     }
 }
