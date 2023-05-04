@@ -216,6 +216,15 @@ class MainActivity : AppCompatActivity() {
         return tv
     }
 
+    private fun destroyFollowerView() {
+        if (followerView != null) {
+            // Destroy and reset for next use
+            setColor(followerView!!, Player.NONE)
+            followerView!!.background = null
+            followerView = null
+        }
+    }
+
     private fun createShadowDrawable(color: Int = R.color.shadow): GradientDrawable {
         // Creating backdrop shadow
         // https://stackoverflow.com/questions/45608049/how-to-make-a-circular-drawable-with-stroke-programmatically/45608694
@@ -273,18 +282,24 @@ class MainActivity : AppCompatActivity() {
                     // Follow the player's finger
                     followerView!!.x = v.x + event.x + boardGridLayout.x - followerViewRadius.toFloat()
                     followerView!!.y = v.y + event.y + boardGridLayout.y - followerViewRadius.toFloat()
+
+                    // Detect if the follower view has moved outside the board grid layout and reset if so
+                    if (
+                        followerView!!.x + followerViewRadius.toFloat() < boardGridLayout.x ||
+                        followerView!!.x + followerViewRadius.toFloat() > (boardGridLayout.x + boardGridLayout.width) ||
+                        followerView!!.y + followerViewRadius.toFloat() < boardGridLayout.y ||
+                        followerView!!.y + followerViewRadius.toFloat() > (boardGridLayout.y + boardGridLayout.height)
+                    ) {
+                        setColor(getView(pos) as TextView, game.selectedPiece.player)
+                        destroyFollowerView()
+                    }
                 }
             }
             MotionEvent.ACTION_UP -> {
                 // Determine board position from current x/y coordinates
                 val newPos = getPositionFromCoordinates(v, event)
 
-                if (followerView != null) {
-                    // Destroy and reset for next use
-                    setColor(followerView!!, Player.NONE)
-                    followerView!!.background = null
-                    followerView = null
-                }
+                destroyFollowerView()
 
                 println("sel pos: ${game.selectedPosition}")
 
@@ -296,7 +311,8 @@ class MainActivity : AppCompatActivity() {
                 // The player attempted to move the same position
                 // The player attempted to move onto one of their own pieces
                 if (!moved && (newPos == game.selectedPosition || game.board.get(newPos).player == game.turn)) {
-                    setColor(getView(game.selectedPosition) as TextView, game.selectedPiece.player)
+                    if (game.selectedPosition.valid)
+                        setColor(getView(game.selectedPosition) as TextView, game.selectedPiece.player)
                 } else if (moved) {
                     debugTextView.text = "moved to $newPos: ${game.board.get(newPos)}"
                 }

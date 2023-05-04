@@ -162,13 +162,19 @@ class ChessPiece(var type: PieceType = PieceType.NONE, val player: Player = Play
         }
 
         fun getRookPositions(game: ChessGame, position: Position, checkLegality: Boolean = true) : MutableList<Position> {
-            // TODO: Implement, similar to ChessGame.doLinearCheck
-            return mutableListOf<Position>()
+            val positions = getLinearPositions(game, position, +1, 0)
+            positions.addAll(getLinearPositions(game, position, -1, 0))
+            positions.addAll(getLinearPositions(game, position, 0, +1))
+            positions.addAll(getLinearPositions(game, position, 0, -1))
+            return positions
         }
 
         fun getBishopPositions(game: ChessGame, position: Position, checkLegality: Boolean = true) : MutableList<Position> {
-            // TODO: Implement, similar to ChessGame.doLinearCheck
-            return mutableListOf<Position>()
+            val positions = getLinearPositions(game, position, +1, +1)
+            positions.addAll(getLinearPositions(game, position, +1, -1))
+            positions.addAll(getLinearPositions(game, position, -1, -1))
+            positions.addAll(getLinearPositions(game, position, -1, +1))
+            return positions
         }
 
         fun getKnightPositions(game: ChessGame, position: Position, checkLegality: Boolean = true) : MutableList<Position> {
@@ -185,14 +191,45 @@ class ChessPiece(var type: PieceType = PieceType.NONE, val player: Player = Play
         }
 
         fun getKingPositions(game: ChessGame, position: Position, checkLegality: Boolean = true) : MutableList<Position> {
-            // TODO: Implement, easy static list of positions like Knight
-            return mutableListOf<Position>()
+            val positions = PositionList(game, position)
+            positions.addIfLegal( 0, +1, checkLegality)
+            positions.addIfLegal(+1, +1, checkLegality)
+            positions.addIfLegal(+1,  0, checkLegality)
+            positions.addIfLegal(+1, -1, checkLegality)
+            positions.addIfLegal( 0, -1, checkLegality)
+            positions.addIfLegal(-1, -1, checkLegality)
+            positions.addIfLegal(-1,  0, checkLegality)
+            positions.addIfLegal(-1, +1, checkLegality)
+            return positions
         }
 
         fun getQueenPositions(game: ChessGame, position: Position, checkLegality: Boolean = true) : MutableList<Position> {
-            val positions = getRookPositions(game, position)
-            positions.addAll(getBishopPositions(game, position))
+            val positions = getRookPositions(game, position, checkLegality)
+            positions.addAll(getBishopPositions(game, position, checkLegality))
             return positions
+        }
+
+        /**
+         * Sequentially look through linear positions according to the specified scalars,
+         * and add them to a running PositionList. Return when an invalid position or another piece is encountered.
+         */
+        private fun getLinearPositions(game: ChessGame, start: Position, rightOffsetScalar: Int, upOffsetScalar: Int): PositionList {
+            val player = game.board.get(start).player
+            var pos: Position
+            var piece: ChessPiece
+            val list = PositionList(game, start)
+            var i = 1
+            do {
+                pos = game.board.getRelativePosition(position = start, rightOffset = rightOffsetScalar * i, upOffset = upOffsetScalar * i)
+                piece = game.board.get(pos)
+                if (piece.player != player) {
+                    list.addIfLegal(pos)
+                    if (piece.player == player.opponent()) break
+                } else
+                    break
+                i++
+            } while (pos.valid)
+            return list
         }
     }
 }
