@@ -1,7 +1,7 @@
 /**
  * Chess Piece Images from: https://commons.wikimedia.org/wiki/Template:SVG_chess_pieces
  * Licensed Under CC3: https://creativecommons.org/licenses/by-sa/3.0/deed.en
- * Author: jurgenwesterhof (adapted from work of Cburnett)
+ * Author: Cburnett
  */
 
 package me.ryzenfromfire.chesslin
