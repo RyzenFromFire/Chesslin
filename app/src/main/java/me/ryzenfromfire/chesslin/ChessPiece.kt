@@ -131,11 +131,16 @@ class ChessPiece(var type: PieceType = PieceType.NONE, val player: Player = Play
             val player = game.board.get(position).player
 
             // Forward one square
-            positions.addIfLegal(0, getRankDirection(player), checkLegality)
+            // Must check for occupation so that capture is not allowed
+            var targetPos = game.board.getRelativePosition(position, 0, getRankDirection(player))
+            if (!game.board.isOccupied(targetPos))
+                positions.addIfLegal(targetPos, checkLegality)
 
             // Add initial 2-square move if the pawn has not yet moved
-            if (!game.board.get(position).hasMoved)
-                positions.addIfLegal(0, 2 * getRankDirection(player), checkLegality)
+            // Must check for occupation so that capture is not allowed
+            targetPos = game.board.getRelativePosition(position, 0, 2 * getRankDirection(player))
+            if (!game.board.get(position).hasMoved && !game.board.isOccupied(targetPos))
+                positions.addIfLegal(targetPos, checkLegality)
 
             // Add capturing positions if there is an opposing piece to the left or right (forward and diagonally)
             val tempList = listOf(

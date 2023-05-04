@@ -91,6 +91,12 @@ class ChessGame {
         if (!move.valid || !move.legal) return false
 
         // At this point the move is good, so perform it
+        // En Passant Handling
+        if (end == ChessMove.getEnPassantTarget(this, selectedPosition)) {
+            val capturedPosition = board.getRelativePosition(end, 0, -1 * ChessPiece.getRankDirection(selectedPiece.player))
+            board.set(position = capturedPosition, piece = ChessPiece.NULL)
+        }
+
         board.set(position = move.end, piece = move.piece)
         board.set(position = move.start, piece = ChessPiece.NULL)
         // TODO: add functionality to keep track of pieces captured by each player
