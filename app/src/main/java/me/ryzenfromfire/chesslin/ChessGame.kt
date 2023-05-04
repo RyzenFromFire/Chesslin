@@ -13,17 +13,16 @@ class ChessGame {
     var selectedPosition = Position.NULL
     var selectedPiece = ChessPiece.NULL
     var movablePositions = mutableListOf<Position>()
-    var lastPosition = Position.NULL
     var isPieceSelected = false // TODO: private?
     var inCheck: Player = Player.NONE
     var gameOver: Boolean = false
-    var moved = false
     var currentMove = 1
     lateinit var winner: Player
     var lastMove: ChessMove = ChessMove.NULL
     private var whiteKingPos = Position("e1")
     private var blackKingPos = Position("e8")
 
+    // Listeners for Controller (MainActivity)
     var onTurnChangedListener: (() -> Unit)? = null
     var onMoveListener: (() -> Unit)? = null
     var onSelectListener: (() -> Unit)? = null
@@ -57,13 +56,15 @@ class ChessGame {
             movablePositions = selectedPiece.getMovablePositions(this, selectedPosition)
 
             onSelectListener?.invoke()
-        }/* else {
-            movablePositions = mutableListOf()
-        }*/
+        }
 
         return isPieceSelected
     }
 
+    /**
+     * Determines if moving the selected piece from the selected position to the specified target/end position is legal.
+     * If so, it performs the move and calls the appropriate update listener, then resets the selection.
+     */
     fun move(end: Position): Boolean {
         if ( // return false if...
             !isPieceSelected || // no piece is selected. also ensures selected position is valid and has a piece via select()
@@ -121,104 +122,10 @@ class ChessGame {
         return true
     }
 
-    /**
-     * Processes game state and moves pieces if appropriate when a position is selected, as determined by the controller.
-     * Returns true if a valid piece of the player whose turn it is was selected, and false otherwise.
-     */
-    fun selectOld(pos: Position): Boolean {
-        // TODO: Implement checking for move (end position) *legality*, not just position validity
-        // TODO: (after above) give feedback to MainActivity (through a listener?) about legal positions to move, so it can highlight them in the View
-        val lastIsPieceSelected = isPieceSelected
-
-        this.selectedPosition = if (pos.valid) pos else Position.NULL
-
-        val selectedPiece = board.get(selectedPosition)
-        val lastSelectedPiece = board.get(lastPosition)
-
-        // if there is a piece at the targeted position and the piece belongs to the player whose turn it currently is
-        // Handles null position since Position.NULL is always invalid
-        isPieceSelected = (selectedPosition.valid) && (selectedPiece.type != PieceType.NONE) && (selectedPiece.player == turn)
-
-        println("isPieceSelected: $isPieceSelected")
-        println("selectedPiece: $selectedPiece")
-        println("lastIsPieceSelected: $lastIsPieceSelected")
-        println("lastSelectedPiece: $lastSelectedPiece")
-
-        // if we have just selected a piece, and one was not already selected
-        if (isPieceSelected && !lastIsPieceSelected) {
-            // determine available moves
-            val positions = selectedPiece.getMovablePositions(this, selectedPosition, true)
-            // using listener similar to ChessBoard, update MainActivity with list of movable positions to display indicators
-            onSelectListener?.invoke()
-        }
-        // at this point, `position` and `isPieceSelected` refer to the target position of the move and if there is a piece there
-        // otherwise, if we have selected a piece last time this function was called, and we just selected a new position, make a move
-        // note that `position.valid` is functionally identical to `position != Position.NULL`, since Position.NULL is automatically invalid
-        // also, if the selected piece is of the same player whose turn it is, don't move because you can't move onto your own piece.
-        else if (
-            lastIsPieceSelected && // a piece was selected previously
-            lastPosition.valid && // the last selected position is valid
-            selectedPosition.valid && // the target position is valid
-            lastPosition != selectedPosition &&
-            selectedPiece.player != turn // the player is not trying to move onto their own piece
-        ) {
-            val promotion = PieceType.NONE // TODO: Implement promotion logic if pawn reaches back rank
-            val castle = false // TODO: Implement castling logic using ChessMove.castleValid(). This might be better suited to the previous if statement and/or class property
-            val move = ChessMove(
-                game = this,
-                num = currentMove,
-                piece = lastSelectedPiece,
-                start = lastPosition,
-                end = selectedPosition,
-                capture = if (isPieceSelected) selectedPiece else ChessPiece.NULL,
-                promotion = promotion,
-                castle = castle
-            )
-
-            moved = moveOld(move)
-            println("moved: $moved")
-            this.selectedPosition = Position.NULL
-            isPieceSelected = false
-            onSelectListener?.invoke()
-        } else isPieceSelected = false /*else if (lastPosition == position || selectedPiece.player == turn) {
-            isPieceSelected = false
-        }*/
-
-        // this will update lastSelection appropriately, including setting it to Position.NULL if a move was made
-        lastPosition = selectedPosition
-
-        return isPieceSelected
-    }
-
-    /**
-     * Helper function to perform an actual move of a chess piece given a ChessMove instance.
-     */
-    private fun moveOld(move: ChessMove): Boolean {
-        if (!move.valid) return false
-        if (!move.legal) return false
-        board.set(position = move.end, piece = move.piece)
-        board.set(position = move.start, piece = ChessPiece.NULL)
-        // TODO: add functionality to keep track of pieces captured by each player
-        moves.add(move)
-        currentMove++
-        switchTurn()
-        if (move.piece.type == KING) {
-            when (move.piece.player) {
-                Player.WHITE -> whiteKingPos = move.end
-                Player.BLACK -> blackKingPos = move.end
-                else -> Log.e("ChessGame", "Movement Error: non-player king movement detected")
-            }
-        }
-        lastMove = move
-        return true
-    }
-
-
     // Takes a move in algebraic notation, e.g. Qf8
+    // TODO: The only reason this is still around is I think it might be useful for generating algebraic notation when I get around to that
     @Deprecated("Deprecated and soon to be replaced with new functionality")
     fun moveOlder(str: String) {
-        // TODO: Input validation
-        // TODO: the ChessPiece should determine whether it can move to a different square given its current square.
 
         // If the first character of the algebraic notation is 'a'..'h', then the piece is a pawn.
         val pieceType: PieceType

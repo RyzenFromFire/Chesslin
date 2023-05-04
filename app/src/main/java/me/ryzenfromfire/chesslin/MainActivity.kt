@@ -22,7 +22,7 @@ import kotlin.math.roundToInt
 
 class MainActivity : AppCompatActivity() {
     private lateinit var boardGridLayout: GridLayout
-    private lateinit var boardViewArray: Array<Array<TextView>>
+    private lateinit var boardViewArray: Array<Array<TextView>> // TODO: Switch to ImageView
     private lateinit var game: ChessGame
 
     private lateinit var turnTextView: TextView
@@ -38,8 +38,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var mainLayout: ConstraintLayout
     private val selectEmptyShadowScalar = 0.5
     private val selectPieceShadowScalar = 1.0
-    private var movedOutOfStartingPosition = false
-    private var tapped = false
     private var shadowedPositions = mutableListOf<Position>()
 
     @SuppressLint("ClickableViewAccessibility")
@@ -302,122 +300,6 @@ class MainActivity : AppCompatActivity() {
                 } else if (moved) {
                     debugTextView.text = "moved to $newPos: ${game.board.get(newPos)}"
                 }
-            }
-        }
-        return true
-    }
-
-    private fun viewOnTouchListenerOld(v: View, event: MotionEvent, pos: Position): Boolean {
-        val piece = game.board.get(pos)
-        val originalPlayer = piece.player
-        when (event.action) {
-            MotionEvent.ACTION_DOWN -> {
-                println("==========")
-                println("DOWN EVENT: selected $pos")
-                println("game.position: ${game.selectedPosition}")
-                println("game.lastPosition: ${game.lastPosition}")
-                if (pos != game.selectedPosition) {
-                    tapped = false
-                    setColor(v as TextView, originalPlayer)
-//                    game.select(pos)
-                }
-                game.selectOld(pos)
-                movedOutOfStartingPosition = false
-                debugTextView.text = "selected $pos: ${game.board.get(pos)}" // TODO: Debug; remove
-                println("==========")
-            }
-            MotionEvent.ACTION_MOVE -> {
-                if (game.isPieceSelected) {
-                    // First, set this textview as invisible
-                    setColor(v as TextView, Player.NONE)
-
-                    // Create a new view to follow around the player's finger
-                    if (followerView == null) {
-                        followerView = createFollowerView(v, piece)
-                    }
-
-                    // Follow the player's finger
-                    followerView!!.x = v.x + event.x + boardGridLayout.x - followerViewRadius.toFloat()
-                    followerView!!.y = v.y + event.y + boardGridLayout.y - followerViewRadius.toFloat()
-                }
-                println("move event detected")
-                val newPos = getPositionFromCoordinates(v, event)
-                if (newPos != game.lastPosition) movedOutOfStartingPosition = true
-            }
-            MotionEvent.ACTION_UP -> {
-                // Determine board position from current x/y coordinates and select it
-                val newPos = getPositionFromCoordinates(v, event)
-                println("==========")
-                println("UP EVENT: newPos = $newPos")
-
-                if (followerView != null) {
-                    // Destroy and reset for next use
-                    setColor(followerView!!, Player.NONE)
-                    followerView!!.background = null
-                    followerView = null
-                }
-
-                println("tapped: $tapped")
-                println("game.lastPosition: ${game.lastPosition}")
-                println("pos: $pos")
-                println("moved out of starting pos: $movedOutOfStartingPosition")
-                if (!tapped) {
-                    if (!movedOutOfStartingPosition) {
-                        tapped = true
-//                        game.select(pos)
-                        setColor(v as TextView, originalPlayer)
-                    } else if (newPos != pos) {
-                        tapped = false
-                        game.selectOld(newPos)
-                        debugTextView.text = "selected $newPos: ${game.board.get(newPos)}" // TODO: Debug; remove
-                    }
-                }
-
-//                if (!movedOutOfStartingPosition && !tapped) {
-//                    tapped = true
-//                } else {
-//                    if (!movedOutOfStartingPosition) {
-//                        // tapped is true
-//                    }
-//                }
-
-                // If we haven't moved out of the starting position, it must be the initial tap, so only reset the view color
-                // If we have moved out of the starting position, it must be a drag
-                // Or, if the list of selected positions is not empty, it must be a second tap
-                // In the two latter cases, select
-//                if (movedOutOfStartingPosition || positionsSelected.isEmpty()) {
-//
-//                } else {
-//                    // Visually return the piece to its original position after an initial tap
-//                    // Otherwise the piece will disappear, because there is most likely a small movement while tapping in reality
-//
-//                }
-
-                // If an invalid position is detected,
-                // or the ending position is the same as the starting position,
-                // basically return the piece to its original position
-                // Otherwise, select the new position.
-//                if (newPos.valid && newPos != game.position) {
-//                    game.select(newPos)
-//                    debugTextView.text = "selected $newPos: ${game.board.get(newPos)}" // TODO: Debug; remove
-//                    println("(UP) selected newPos = $newPos")
-//                } else if (!newPos.valid || newPos == game.position) {
-//                    if (!game.moved) game.select(game.position)
-//                    debugTextView.text = "selected $pos: ${game.board.get(pos)}" // TODO: Debug; remove
-//                    println("(UP) new pos invalid")
-//                    println("(UP) selected old pos = ${game.position}")
-//                    setColor(v as TextView, piece.player)
-//                } /*else if (newPos == pos) {
-//                                println("(UP) newPos == pos")
-//                                if (movedOutOfStartingPosition) {
-//                                    println("(UP) moved out of starting position")
-//                                    game.select(pos)
-//                                    debugTextView.text = "selected $pos: ${game.board.get(pos)}" // TODO: Debug; remove
-//                                    println("(UP) selected old pos = $pos")
-//                                }
-//                                setColor(v as TextView, piece.player)
-//                            }*/
-//                println("==========")
             }
         }
         return true
