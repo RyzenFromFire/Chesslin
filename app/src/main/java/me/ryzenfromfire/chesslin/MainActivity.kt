@@ -19,11 +19,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.gridlayout.widget.GridLayout
-import com.google.android.material.shape.MaterialShapeDrawable
 import me.ryzenfromfire.chesslin.ChessBoard.Companion.NUM_RANKS_FILES
 import me.ryzenfromfire.chesslin.ChessGame.Player
 import me.ryzenfromfire.chesslin.ChessBoard.Position
 import me.ryzenfromfire.chesslin.ChessBoard.File
+import me.ryzenfromfire.chesslin.ChessGame.MoveResult.*
 import kotlin.math.roundToInt
 
 class MainActivity : AppCompatActivity() {
@@ -85,7 +85,6 @@ class MainActivity : AppCompatActivity() {
                     viewOnTouchListener(v, event, pos)
                 }
 
-//                setColor(iView, game.board.get(pos).player)
                 setView(pos, iView)
 
                 // Border for debugging
@@ -111,8 +110,6 @@ class MainActivity : AppCompatActivity() {
         game.board.onSet = { position: Position, piece: ChessPiece ->
             if (position.valid) {
                 val view = boardViewArray[position.rank - 1][position.file.index]
-//                view.text = piece.type.str
-//                setColor(view, piece.player)
                 resetViewDrawable(view, position)
             }
         }
@@ -140,14 +137,6 @@ class MainActivity : AppCompatActivity() {
         resetButton = findViewById(R.id.resetButton)
         resetButton.setOnClickListener {
             this.recreate()
-        }
-    }
-
-    private fun setColor(tv: TextView, player: Player) {
-        when (player) {
-            Player.WHITE -> tv.setTextColor(getColor(R.color.white))
-            Player.BLACK -> tv.setTextColor(getColor(R.color.black))
-            else -> tv.setTextColor(getColor(R.color.transparent))
         }
     }
 
@@ -196,6 +185,10 @@ class MainActivity : AppCompatActivity() {
     private fun resetViewDrawable(view: SquareImageView, piece: ChessPiece) {
         val id = piece.getDrawableID()
         if (id != null) view.setImageResource(id)
+        if (boardFlipped && piece.player == Player.BLACK)
+            view.rotation = 180f
+        else
+            view.rotation = 0f
     }
 
     private fun setEmptyDrawable(view: SquareImageView) {
@@ -213,16 +206,12 @@ class MainActivity : AppCompatActivity() {
         val view = createChessPieceView(piece)
         mainLayout.addView(view)
         followerShadowSize = (followerShadowScalar * v.width).roundToInt()
-//        view.height = followerShadowSize
-//        view.width = followerShadowSize
-//        view.gravity = Gravity.CENTER
 
         // Creating backdrop shadow
         val gd = createShadowDrawable()
         view.background = gd
         view.background.bounds = Rect(followerShadowSize, followerShadowSize, followerShadowSize, followerShadowSize)
 
-//        setColor(view, piece.player)
         resetViewDrawable(view, piece)
         followerViewRadius = followerShadowSize.toDouble() / 2.0
         view.x = v.x + boardGridLayout.x - followerViewRadius.toFloat()
@@ -233,7 +222,6 @@ class MainActivity : AppCompatActivity() {
     private fun destroyFollowerView() {
         if (followerView != null) {
             // Destroy and reset for next use
-//            setColor(followerView!!, Player.NONE)
             setEmptyDrawable(followerView!!)
             followerView!!.background = null
             followerView = null
@@ -286,7 +274,6 @@ class MainActivity : AppCompatActivity() {
             MotionEvent.ACTION_MOVE -> {
                 if (game.isPieceSelected && pos == game.selectedPosition) {
                     // First, set this textview as invisible
-//                    setColor(v as TextView, Player.NONE)
                     setEmptyDrawable(v as SquareImageView)
 
                     // Create a new view to follow around the player's finger
@@ -305,7 +292,6 @@ class MainActivity : AppCompatActivity() {
                         followerView!!.y + followerViewRadius.toFloat() < boardGridLayout.y ||
                         followerView!!.y + followerViewRadius.toFloat() > (boardGridLayout.y + boardGridLayout.height)
                     ) {
-//                        setColor(getView(pos) as TextView, game.selectedPiece.player)
                         getView(pos)?.let { resetViewDrawable(it, pos) }
                         destroyFollowerView()
                     }
@@ -320,18 +306,16 @@ class MainActivity : AppCompatActivity() {
                 println("sel pos: ${game.selectedPosition}")
 
                 // Attempt to move to the new position
-                val moved = game.move(newPos)
-                println("moved: $moved")
+                val moveResult = game.move(newPos)
+                println("moved: $moveResult")
 
-                // If the move was unsuccessful because of either of the following, reset:
-                // The player attempted to move the same position
-                // The player attempted to move onto one of their own pieces
-                if (!moved && (newPos == game.selectedPosition || game.board.get(newPos).player == game.turn)) {
+                // If the move was unsuccessful because of the following, reset:
+                if (moveResult == SAME_START_END_POS ||
+                    moveResult == MOVE_ONTO_OWN_PIECE ||
+                    moveResult == MOVE_ILLEGAL) {
                     if (game.selectedPosition.valid)
                         resetViewDrawable(getView(game.selectedPosition)!!, game.selectedPiece)
-//                        setColor(getView(game.selectedPosition) as TextView, game.selectedPiece.player)
-
-                } else if (moved) {
+                } else if (moveResult == MOVE_GOOD) {
                     debugTextView.text = "moved to $newPos: ${game.board.get(newPos)}"
                 }
             }

@@ -35,9 +35,6 @@ class ChessMove(
                 valid = false
             }
 
-            // TODO: Implement checking for if the player whose turn it is is in check, and limit moves appropriately
-            // TODO: probably implement another checking function in the companion object to do this
-
             // TODO: look at the game state to determine if the move leads to a check, and update game.inCheck appropriately
 
             // Game End Notation
@@ -66,7 +63,7 @@ class ChessMove(
 
     companion object {
         val NULL = ChessMove(null, -1, ChessPiece.NULL, Position.NULL, Position.NULL)
-        val NUM_TEST_MOVE = -2
+        const val NUM_TEST_MOVE = -2
 
         // The following functions consider multiple pieces in the context of a ChessMove, so they are not in the ChessPiece class
 
@@ -100,11 +97,11 @@ class ChessMove(
             // Return appropriate position based on if the last move ended to the left or right
             val left = game.board.getRelativePosition(pos, -1, 0)
             val right = game.board.getRelativePosition(pos, 1, 0)
-            return when (game.lastMove.end) {
-                left -> game.board.getRelativePosition(pos, -1, 1)
-                right -> game.board.getRelativePosition(pos, 1, 1)
-                else -> Position.NULL
-            }
+            return if (game.lastMove.end == left && game.board.get(left).hasJustMoved) {
+                game.board.getRelativePosition(pos, -1, 1)
+            } else if (game.lastMove.end == right && game.board.get(right).hasJustMoved) {
+                game.board.getRelativePosition(pos, 1, 1)
+            } else Position.NULL
         }
     }
 

@@ -61,24 +61,33 @@ class ChessGame {
         return isPieceSelected
     }
 
-    /**
-     * Determines if moving the selected piece from the selected position to the specified target/end position is legal.
-     * If so, it performs the move and calls the appropriate update listener, then resets the selection.
-     */
-    fun move(end: Position): Boolean {
-        if ( // return false if...
-            !isPieceSelected || // no piece is selected. also ensures selected position is valid and has a piece via select()
-            !end.valid || // end position is invalid
-            end == selectedPosition || // the start and end positions are the same
-            board.get(end).player == selectedPiece.player // player is trying to move onto their own piece
-        ) return false
+    enum class MoveResult {
+        NO_PIECE_SELECTED,
+        END_POSITION_INVALID,
+        SAME_START_END_POS,
+        MOVE_ONTO_OWN_PIECE,
+        MOVE_INVALID,
+        MOVE_ILLEGAL,
+        MOVE_GOOD
+    }
 
-        // Generate move based on selected position
+    /**
+     * Returns true only if the move created from the specified end position is legal.
+     */
+    fun isMoveLegal(end: Position): Boolean {
+        return getMove(end).legal
+    }
+
+    /**
+     * Generates a ChessMove from the given position based on the current game state.
+     */
+    private fun getMove(end: Position): ChessMove {
         val targetPiece = board.get(end)
         val promotion = PieceType.NONE // TODO: Implement promotion logic if pawn reaches back rank
-        val castle = false // TODO: Implement castling logic using ChessMove.castleValid(). This might be better suited to the previous if statement and/or class property
+        val castle =
+            false // TODO: Implement castling logic using ChessMove.castleValid().
         val capture = targetPiece.player == selectedPiece.player.opponent()
-        val move = ChessMove(
+        return ChessMove(
             game = this,
             num = currentMove,
             piece = selectedPiece,
@@ -88,13 +97,28 @@ class ChessGame {
             promotion = promotion,
             castle = castle
         )
+    }
 
-        if (!move.valid || !move.legal) return false
+    /**
+     * Determines if moving the selected piece from the selected position to the specified target/end position is legal.
+     * If so, it performs the move and calls the appropriate update listener, then resets the selection.
+     */
+    fun move(end: Position): MoveResult {
+        if (!isPieceSelected) return MoveResult.NO_PIECE_SELECTED
+        if (!end.valid) return MoveResult.END_POSITION_INVALID
+        if (end == selectedPosition) return MoveResult.SAME_START_END_POS
+        if (board.get(end).player == selectedPiece.player) return MoveResult.MOVE_ONTO_OWN_PIECE
+
+        // Generate move based on selected position
+        val move = getMove(end)
+
+        if (!move.valid) return MoveResult.MOVE_INVALID
+        if (!move.legal) return MoveResult.MOVE_ILLEGAL
 
         // At this point the move is good, so perform it
         // En Passant Handling
         if (end == ChessMove.getEnPassantTarget(this, selectedPosition)) {
-            val capturedPosition = board.getRelativePosition(end, 0, -1 * ChessPiece.getRankDirection(selectedPiece.player))
+            val capturedPosition = board.getRelativePosition(end, 0, -1 * ChessPiece.getPawnDirection(selectedPiece.player))
             board.set(position = capturedPosition, piece = ChessPiece.NULL)
         }
 
@@ -119,7 +143,7 @@ class ChessGame {
         isPieceSelected = false
         movablePositions = mutableListOf()
         onMoveListener?.invoke()
-        return true
+        return MoveResult.MOVE_GOOD
     }
 
     // Takes a move in algebraic notation, e.g. Qf8
@@ -225,13 +249,8 @@ class ChessGame {
 
         // Test if a pawn could check the king
         val pawnPositions = mutableListOf<Position>()
-        val rankDirection: Int = when (player) {
-            Player.BLACK -> -1
-            else -> 1 // when Player.WHITE, since Player.NONE will return by now
-        }
-
-        pawnPositions.add(board.getRelativePosition(kingPos, -1, rankDirection))
-        pawnPositions.add(board.getRelativePosition(kingPos, 1, rankDirection))
+        pawnPositions.add(board.getRelativePosition(kingPos, -1, ChessPiece.getPawnDirection(player)))
+        pawnPositions.add(board.getRelativePosition(kingPos, 1, ChessPiece.getPawnDirection(player)))
         for (pos in pawnPositions) {
             piece = board.get(pos)
             // If a pawn belonging to the opponent is in the position, return true
@@ -308,12 +327,13 @@ class ChessGame {
         do {
             pos = board.getRelativePosition(position = position, rightOffset = rightOffsetScalar * i, upOffset = upOffsetScalar * i)
             piece = board.get(pos)
-            if (piece.player != Player.NONE)
+            if (piece.player == player.opponent())
                 if (pieceType == ROOK) {
-                    return piece.player == player.opponent() && (piece.type == ROOK || piece.type == QUEEN)
+                    return (piece.type == ROOK || piece.type == QUEEN)
                 } else if (pieceType == BISHOP) {
-                    return piece.player == player.opponent() && (piece.type == BISHOP || piece.type == QUEEN)
+                    return (piece.type == BISHOP || piece.type == QUEEN)
                 }
+            else if (piece.player == player) return false
             i++
         } while (pos.valid)
         return false

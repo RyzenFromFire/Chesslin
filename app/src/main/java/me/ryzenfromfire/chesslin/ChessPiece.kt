@@ -1,6 +1,5 @@
 package me.ryzenfromfire.chesslin
 
-import android.graphics.drawable.Drawable
 import me.ryzenfromfire.chesslin.ChessGame.Player
 import me.ryzenfromfire.chesslin.ChessBoard.Position
 
@@ -8,6 +7,7 @@ class ChessPiece(var type: PieceType = PieceType.NONE, val player: Player = Play
     var hasMoved = false
         set(value) {
             hasJustMoved = !field && value
+            println("$this hasJustMoved?=$hasJustMoved")
             field = value
         }
     var hasJustMoved = false
@@ -137,7 +137,7 @@ class ChessPiece(var type: PieceType = PieceType.NONE, val player: Player = Play
          * @return a scalar (+1 or -1) for white or black respectively.
          * Avoid usage with Player.NONE (returns 0) - this could yield unexpected results.
          */
-        fun getRankDirection(player: Player): Int {
+        fun getPawnDirection(player: Player): Int {
             return when (player) {
                 Player.WHITE -> +1
                 Player.BLACK -> -1
@@ -156,20 +156,20 @@ class ChessPiece(var type: PieceType = PieceType.NONE, val player: Player = Play
 
             // Forward one square
             // Must check for occupation so that capture is not allowed
-            var targetPos = game.board.getRelativePosition(position, 0, getRankDirection(player))
+            var targetPos = game.board.getRelativePosition(position, 0, getPawnDirection(player))
             if (!game.board.isOccupied(targetPos))
                 positions.addIfLegal(targetPos, checkLegality)
 
             // Add initial 2-square move if the pawn has not yet moved
             // Must check for occupation so that capture is not allowed
-            targetPos = game.board.getRelativePosition(position, 0, 2 * getRankDirection(player))
+            targetPos = game.board.getRelativePosition(position, 0, 2 * getPawnDirection(player))
             if (!game.board.get(position).hasMoved && !game.board.isOccupied(targetPos))
                 positions.addIfLegal(targetPos, checkLegality)
 
             // Add capturing positions if there is an opposing piece to the left or right (forward and diagonally)
             val tempList = listOf(
-                game.board.getRelativePosition(position, +1, getRankDirection(player)),
-                game.board.getRelativePosition(position, -1, getRankDirection(player))
+                game.board.getRelativePosition(position, +1, getPawnDirection(player)),
+                game.board.getRelativePosition(position, -1, getPawnDirection(player))
             )
             for (pos in tempList) {
                 if (game.board.get(pos).player == game.board.get(position).player.opponent()) {
