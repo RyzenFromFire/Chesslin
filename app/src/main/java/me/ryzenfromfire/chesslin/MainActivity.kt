@@ -1,3 +1,9 @@
+/**
+ * Chess Piece Images from: https://commons.wikimedia.org/wiki/Template:SVG_chess_pieces
+ * Licensed Under CC3: https://creativecommons.org/licenses/by-sa/3.0/deed.en
+ * Author: jurgenwesterhof (adapted from work of Cburnett)
+ */
+
 package me.ryzenfromfire.chesslin
 
 import android.annotation.SuppressLint
@@ -204,7 +210,6 @@ class MainActivity : AppCompatActivity() {
         tv.gravity = Gravity.CENTER
 
         // Creating backdrop shadow
-        // https://stackoverflow.com/questions/45608049/how-to-make-a-circular-drawable-with-stroke-programmatically/45608694
         val gd = createShadowDrawable()
         tv.background = gd
         tv.background.bounds = Rect(followerShadowSize, followerShadowSize, followerShadowSize, followerShadowSize)
@@ -265,7 +270,6 @@ class MainActivity : AppCompatActivity() {
         val piece = game.board.get(pos)
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
-//                if (game.board.get(pos).player == game.turn)
                 game.select(pos)
                 debugTextView.text = "selected $pos: ${game.board.get(pos)}" // TODO: Debug; remove
             }
