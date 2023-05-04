@@ -36,6 +36,11 @@ class MainActivity : AppCompatActivity() {
     private var followerShadowSize = 0
     private var followerViewRadius = 0.0
     private lateinit var mainLayout: ConstraintLayout
+    private val selectEmptyShadowScalar = 0.5
+    private val selectPieceShadowScalar = 1.0
+    private var movedOutOfStartingPosition = false
+    private var tapped = false
+    private var shadowedPositions = mutableListOf<Position>()
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -72,53 +77,7 @@ class MainActivity : AppCompatActivity() {
                 tv = createChessPieceView(game.board.get(pos))
 
                 tv.setOnTouchListener { v, event ->
-                    val piece = game.board.get(pos)
-                    when (event.action) {
-                        MotionEvent.ACTION_DOWN -> {
-                            game.select(pos)
-                            debugTextView.text = "selected $pos" // TODO: Debug; remove
-                            getPositionFromCoordinates(v, event) // for debug
-                        }
-                        MotionEvent.ACTION_MOVE -> {
-                            if (game.isPieceSelected) {
-                                // First, set this textview as invisible
-                                setColor(v as TextView, Player.NONE)
-
-                                // Create a new view to follow around the player's finger
-                                if (followerView == null) {
-                                    followerView = createFollowerView(v, piece)
-                                }
-
-                                // Follow the player's finger
-                                followerView!!.x = v.x + event.x + boardGridLayout.x - followerViewRadius.toFloat()
-                                followerView!!.y = v.y + event.y + boardGridLayout.y - followerViewRadius.toFloat()
-                            }
-                        }
-                        MotionEvent.ACTION_UP -> {
-                            // Determine board position from current x/y coordinates and select it
-                            val newPos = getPositionFromCoordinates(v, event)
-
-                            if (followerView != null) {
-                                // Destroy and reset for next use
-                                setColor(followerView!!, Player.NONE)
-                                followerView!!.background = null
-                                followerView = null
-                            }
-
-                            // If an invalid position is detected,
-                            // or the ending position is the same as the starting position,
-                            // basically return the piece to its original position
-                            // Otherwise, select the new position.
-                            if (newPos.valid && newPos != pos) {
-                                game.select(newPos)
-                            } else if (!newPos.valid || newPos == pos) {
-                                game.select(pos)
-                                setColor(v as TextView, piece.player)
-                            }
-                            debugTextView.text = "selected $pos" // TODO: Debug; remove
-                        }
-                    }
-                    true
+                    viewOnTouchListener(v, event, pos)
                 }
 
                 setColor(tv, game.board.get(pos).player)
@@ -152,10 +111,23 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        game.onTurnChangedListener = {
-            if (game.turn == Player.BLACK)
-                turnTextView.text = getString(R.string.turn_black)
-            else turnTextView.text = getString(R.string.turn_white)
+        game.onSelectListener = {
+            for (position in shadowedPositions) {
+                removePositionShadow(position)
+            }
+            print("positions: [ ")
+            for (position in game.movablePositions) {
+                addPositionShadow(position)
+                print("$position ")
+            }
+            println("]")
+            shadowedPositions = game.movablePositions
+        }
+
+        game.onMoveListener = {
+            // remove position shadows. will not select any new positions since game.movablePositions is an empty list.
+            game.onSelectListener?.invoke()
+            switchTurn()
         }
 
         // For Debug
@@ -186,6 +158,33 @@ class MainActivity : AppCompatActivity() {
         } else false
     }
 
+    private fun switchTurn() {
+        if (game.turn == Player.BLACK)
+            turnTextView.text = getString(R.string.turn_black)
+        else turnTextView.text = getString(R.string.turn_white)
+    }
+
+    private fun addPositionShadow(position: Position): Boolean {
+        return if (position.valid) {
+            val v = boardViewArray[position.rank - 1][position.file.index]
+            v.background = createShadowDrawable()
+            val size = if (game.board.isOccupied(position)) {
+//                println("SELECT OCCUPIED")
+                (selectPieceShadowScalar * v.width).roundToInt()
+            } else {
+//                println("SELECT EMPTY")
+                (selectEmptyShadowScalar * v.width).roundToInt()
+            }
+//            println(size)
+            v.background.bounds = Rect(size, size, size, size)
+            true
+        } else false
+    }
+
+    private fun removePositionShadow(position: Position) {
+        boardViewArray[position.rank - 1][position.file.index].background = null
+    }
+
     private fun createChessPieceView(piece: ChessPiece): TextView {
         val tv = TextView(this)
         tv.text = piece.type.str
@@ -208,9 +207,7 @@ class MainActivity : AppCompatActivity() {
 
         // Creating backdrop shadow
         // https://stackoverflow.com/questions/45608049/how-to-make-a-circular-drawable-with-stroke-programmatically/45608694
-        val gd = GradientDrawable()
-        gd.color = ContextCompat.getColorStateList(this, R.color.shadow)
-        gd.shape = GradientDrawable.OVAL
+        val gd = createShadowDrawable()
         tv.background = gd
         tv.background.bounds = Rect(followerShadowSize, followerShadowSize, followerShadowSize, followerShadowSize)
 
@@ -219,6 +216,15 @@ class MainActivity : AppCompatActivity() {
         tv.x = v.x + boardGridLayout.x - followerViewRadius.toFloat()
         tv.y = v.y + boardGridLayout.y - followerViewRadius.toFloat()
         return tv
+    }
+
+    private fun createShadowDrawable(color: Int = R.color.shadow): GradientDrawable {
+        // Creating backdrop shadow
+        // https://stackoverflow.com/questions/45608049/how-to-make-a-circular-drawable-with-stroke-programmatically/45608694
+        val gd = GradientDrawable()
+        gd.color = ContextCompat.getColorStateList(this, color)
+        gd.shape = GradientDrawable.OVAL
+        return gd
     }
 
     private fun getPositionFromCoordinates(v: View, event: MotionEvent): Position {
@@ -246,5 +252,174 @@ class MainActivity : AppCompatActivity() {
         if (newFileIdx !in File.values().indices) return Position.NULL
 
         return Position(rank = newRank, file = File[newFileIdx]!!)
+    }
+
+    private fun viewOnTouchListener(v: View, event: MotionEvent, pos: Position): Boolean {
+        val piece = game.board.get(pos)
+        when (event.action) {
+            MotionEvent.ACTION_DOWN -> {
+//                if (game.board.get(pos).player == game.turn)
+                game.select(pos)
+                debugTextView.text = "selected $pos: ${game.board.get(pos)}" // TODO: Debug; remove
+            }
+            MotionEvent.ACTION_MOVE -> {
+                if (game.isPieceSelected && pos == game.selectedPosition) {
+                    // First, set this textview as invisible
+                    setColor(v as TextView, Player.NONE)
+
+                    // Create a new view to follow around the player's finger
+                    if (followerView == null) {
+                        followerView = createFollowerView(v, piece)
+                    }
+
+                    // Follow the player's finger
+                    followerView!!.x = v.x + event.x + boardGridLayout.x - followerViewRadius.toFloat()
+                    followerView!!.y = v.y + event.y + boardGridLayout.y - followerViewRadius.toFloat()
+                }
+            }
+            MotionEvent.ACTION_UP -> {
+                // Determine board position from current x/y coordinates
+                val newPos = getPositionFromCoordinates(v, event)
+
+                if (followerView != null) {
+                    // Destroy and reset for next use
+                    setColor(followerView!!, Player.NONE)
+                    followerView!!.background = null
+                    followerView = null
+                }
+
+                println("sel pos: ${game.selectedPosition}")
+
+                // Attempt to move to the new position
+                val moved = game.move(newPos)
+                println("moved: $moved")
+
+                // If the move was unsuccessful because of either of the following, reset:
+                // The player attempted to move the same position
+                // The player attempted to move onto one of their own pieces
+                if (!moved && (newPos == game.selectedPosition || game.board.get(newPos).player == game.turn)) {
+                    setColor(getView(game.selectedPosition) as TextView, game.selectedPiece.player)
+                } else if (moved) {
+                    debugTextView.text = "moved to $newPos: ${game.board.get(newPos)}"
+                }
+            }
+        }
+        return true
+    }
+
+    private fun viewOnTouchListenerOld(v: View, event: MotionEvent, pos: Position): Boolean {
+        val piece = game.board.get(pos)
+        val originalPlayer = piece.player
+        when (event.action) {
+            MotionEvent.ACTION_DOWN -> {
+                println("==========")
+                println("DOWN EVENT: selected $pos")
+                println("game.position: ${game.selectedPosition}")
+                println("game.lastPosition: ${game.lastPosition}")
+                if (pos != game.selectedPosition) {
+                    tapped = false
+                    setColor(v as TextView, originalPlayer)
+//                    game.select(pos)
+                }
+                game.selectOld(pos)
+                movedOutOfStartingPosition = false
+                debugTextView.text = "selected $pos: ${game.board.get(pos)}" // TODO: Debug; remove
+                println("==========")
+            }
+            MotionEvent.ACTION_MOVE -> {
+                if (game.isPieceSelected) {
+                    // First, set this textview as invisible
+                    setColor(v as TextView, Player.NONE)
+
+                    // Create a new view to follow around the player's finger
+                    if (followerView == null) {
+                        followerView = createFollowerView(v, piece)
+                    }
+
+                    // Follow the player's finger
+                    followerView!!.x = v.x + event.x + boardGridLayout.x - followerViewRadius.toFloat()
+                    followerView!!.y = v.y + event.y + boardGridLayout.y - followerViewRadius.toFloat()
+                }
+                println("move event detected")
+                val newPos = getPositionFromCoordinates(v, event)
+                if (newPos != game.lastPosition) movedOutOfStartingPosition = true
+            }
+            MotionEvent.ACTION_UP -> {
+                // Determine board position from current x/y coordinates and select it
+                val newPos = getPositionFromCoordinates(v, event)
+                println("==========")
+                println("UP EVENT: newPos = $newPos")
+
+                if (followerView != null) {
+                    // Destroy and reset for next use
+                    setColor(followerView!!, Player.NONE)
+                    followerView!!.background = null
+                    followerView = null
+                }
+
+                println("tapped: $tapped")
+                println("game.lastPosition: ${game.lastPosition}")
+                println("pos: $pos")
+                println("moved out of starting pos: $movedOutOfStartingPosition")
+                if (!tapped) {
+                    if (!movedOutOfStartingPosition) {
+                        tapped = true
+//                        game.select(pos)
+                        setColor(v as TextView, originalPlayer)
+                    } else if (newPos != pos) {
+                        tapped = false
+                        game.selectOld(newPos)
+                        debugTextView.text = "selected $newPos: ${game.board.get(newPos)}" // TODO: Debug; remove
+                    }
+                }
+
+//                if (!movedOutOfStartingPosition && !tapped) {
+//                    tapped = true
+//                } else {
+//                    if (!movedOutOfStartingPosition) {
+//                        // tapped is true
+//                    }
+//                }
+
+                // If we haven't moved out of the starting position, it must be the initial tap, so only reset the view color
+                // If we have moved out of the starting position, it must be a drag
+                // Or, if the list of selected positions is not empty, it must be a second tap
+                // In the two latter cases, select
+//                if (movedOutOfStartingPosition || positionsSelected.isEmpty()) {
+//
+//                } else {
+//                    // Visually return the piece to its original position after an initial tap
+//                    // Otherwise the piece will disappear, because there is most likely a small movement while tapping in reality
+//
+//                }
+
+                // If an invalid position is detected,
+                // or the ending position is the same as the starting position,
+                // basically return the piece to its original position
+                // Otherwise, select the new position.
+//                if (newPos.valid && newPos != game.position) {
+//                    game.select(newPos)
+//                    debugTextView.text = "selected $newPos: ${game.board.get(newPos)}" // TODO: Debug; remove
+//                    println("(UP) selected newPos = $newPos")
+//                } else if (!newPos.valid || newPos == game.position) {
+//                    if (!game.moved) game.select(game.position)
+//                    debugTextView.text = "selected $pos: ${game.board.get(pos)}" // TODO: Debug; remove
+//                    println("(UP) new pos invalid")
+//                    println("(UP) selected old pos = ${game.position}")
+//                    setColor(v as TextView, piece.player)
+//                } /*else if (newPos == pos) {
+//                                println("(UP) newPos == pos")
+//                                if (movedOutOfStartingPosition) {
+//                                    println("(UP) moved out of starting position")
+//                                    game.select(pos)
+//                                    debugTextView.text = "selected $pos: ${game.board.get(pos)}" // TODO: Debug; remove
+//                                    println("(UP) selected old pos = $pos")
+//                                }
+//                                setColor(v as TextView, piece.player)
+//                            }*/
+//                println("==========")
+            }
+        }
+        return true
     }
 }

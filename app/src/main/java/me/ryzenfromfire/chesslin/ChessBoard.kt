@@ -166,8 +166,8 @@ class ChessBoard {
      * @param upOffset positive for increasing rank from 1..9, and vice versa
      */
     fun getRelativePosition(position: Position, rightOffset: Int, upOffset: Int): Position {
-        val rank: Int = position.rank + rightOffset
-        val file: File = File[position.file.index + upOffset] ?: return Position.NULL
+        val rank: Int = position.rank + upOffset
+        val file: File = File[position.file.index + rightOffset] ?: return Position.NULL
         val newPos = Position(rank = rank, file = file)
         return if (newPos.valid) newPos else Position.NULL
     }

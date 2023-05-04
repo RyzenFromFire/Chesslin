@@ -19,6 +19,11 @@ class ChessMove(
 ) {
     val check: Player = Player.NONE // the player who is checked as a result of the move
     var valid: Boolean = true
+    val legal: Boolean
+        get() {
+            if (game == null) return false
+            return (this.end in piece.getMovablePositions(game, start))
+        }
     private var notation: String = ""
 
     init {

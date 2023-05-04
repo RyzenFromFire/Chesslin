@@ -11,6 +11,10 @@ class ChessPiece(var type: PieceType = PieceType.NONE, val player: Player = Play
         }
     var hasJustMoved = false
 
+    override fun toString(): String {
+        return StringBuilder().append(player.str).append(" ").append(type.fullStr).toString()
+    }
+
     enum class PieceType(val str: String, val fullStr: String, val points: Int) {
         NONE("_", "", 0),
         PAWN("P", "Pawn", 1),
@@ -35,14 +39,14 @@ class ChessPiece(var type: PieceType = PieceType.NONE, val player: Player = Play
      * Returns a list of positions that can be legally be reached by the piece at the specified position.
      * @param checkLegality: default true, set false to ignore legality of moves considered, and only consider if the move is possible.
      */
-    fun getMovablePositions(game: ChessGame, position: Position, checkLegality: Boolean = true): MutableList<Position> {
+    fun getMovablePositions(game: ChessGame, start: Position, checkLegality: Boolean = true): MutableList<Position> {
         return when (this.type) {
-            PieceType.PAWN -> getPawnPositions(game, position)
-            PieceType.ROOK -> getRookPositions(game, position)
-            PieceType.BISHOP -> getBishopPositions(game, position)
-            PieceType.KNIGHT -> getKnightPositions(game, position)
-            PieceType.QUEEN -> getQueenPositions(game, position)
-            PieceType.KING -> getKingPositions(game, position)
+            PieceType.PAWN -> getPawnPositions(game, start)
+            PieceType.ROOK -> getRookPositions(game, start)
+            PieceType.BISHOP -> getBishopPositions(game, start)
+            PieceType.KNIGHT -> getKnightPositions(game, start)
+            PieceType.QUEEN -> getQueenPositions(game, start)
+            PieceType.KING -> getKingPositions(game, start)
             else -> mutableListOf<Position>()
         }
     }
@@ -85,12 +89,13 @@ class ChessPiece(var type: PieceType = PieceType.NONE, val player: Player = Play
         }
 
         fun addIfLegal(pos: Position, checkLegality: Boolean = true) {
+            val piece = game.board.get(startingPosition)
             if (pos.valid) {
                 if (!checkLegality) {
                     this.add(pos)
                 } else if (
-                    !game.board.isOccupied(pos) &&
-                    !game.isCheckedAfterMove(game.board.get(startingPosition).player, getMove(pos))
+                    (!game.board.isOccupied(pos) || game.board.get(pos).player == piece.player.opponent()) &&
+                    !game.isCheckedAfterMove(piece.player, getMove(pos))
                 ) {
                     this.add(pos)
                 }
@@ -123,16 +128,16 @@ class ChessPiece(var type: PieceType = PieceType.NONE, val player: Player = Play
          */
         fun getPawnPositions(game: ChessGame, position: Position, checkLegality: Boolean = true) : MutableList<Position> {
             val positions = PositionList(game, position)
+            val player = game.board.get(position).player
 
             // Forward one square
-            positions.addIfLegal(0, +1, checkLegality)
+            positions.addIfLegal(0, getRankDirection(player), checkLegality)
 
             // Add initial 2-square move if the pawn has not yet moved
             if (!game.board.get(position).hasMoved)
-                positions.addIfLegal(0, +2, checkLegality)
+                positions.addIfLegal(0, 2 * getRankDirection(player), checkLegality)
 
             // Add capturing positions if there is an opposing piece to the left or right (forward and diagonally)
-            val player = game.board.get(position).player
             val tempList = listOf(
                 game.board.getRelativePosition(position, +1, getRankDirection(player)),
                 game.board.getRelativePosition(position, -1, getRankDirection(player))
@@ -165,7 +170,7 @@ class ChessPiece(var type: PieceType = PieceType.NONE, val player: Player = Play
             val positions = PositionList(game, position)
             positions.addIfLegal(+1, +2, checkLegality)
             positions.addIfLegal(+2, +1, checkLegality)
-            positions.addIfLegal(+2, +1, checkLegality)
+            positions.addIfLegal(+2, -1, checkLegality)
             positions.addIfLegal(+1, -2, checkLegality)
             positions.addIfLegal(-1, -2, checkLegality)
             positions.addIfLegal(-2, -1, checkLegality)
