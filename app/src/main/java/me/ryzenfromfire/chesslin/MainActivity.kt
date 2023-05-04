@@ -8,7 +8,6 @@ package me.ryzenfromfire.chesslin
 
 import android.annotation.SuppressLint
 import android.graphics.Rect
-import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.Gravity
@@ -20,6 +19,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.gridlayout.widget.GridLayout
+import com.google.android.material.shape.MaterialShapeDrawable
 import me.ryzenfromfire.chesslin.ChessBoard.Companion.NUM_RANKS_FILES
 import me.ryzenfromfire.chesslin.ChessGame.Player
 import me.ryzenfromfire.chesslin.ChessBoard.Position
@@ -28,7 +28,7 @@ import kotlin.math.roundToInt
 
 class MainActivity : AppCompatActivity() {
     private lateinit var boardGridLayout: GridLayout
-    private lateinit var boardViewArray: Array<Array<TextView>> // TODO: Switch to ImageView
+    private lateinit var boardViewArray: Array<Array<SquareImageView>>
     private lateinit var game: ChessGame
 
     private lateinit var turnTextView: TextView
@@ -37,7 +37,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var debugTextView: TextView
     private lateinit var resetButton: Button
 
-    private var followerView: TextView? = null
+    private var followerView: SquareImageView? = null
     private val followerShadowScalar = 1.5
     private var followerShadowSize = 0
     private var followerViewRadius = 0.0
@@ -45,6 +45,7 @@ class MainActivity : AppCompatActivity() {
     private val selectEmptyShadowScalar = 0.5
     private val selectPieceShadowScalar = 1.0
     private var shadowedPositions = mutableListOf<Position>()
+    private var boardFlipped = true
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,14 +63,14 @@ class MainActivity : AppCompatActivity() {
         followerShadowSize = ((boardGridLayout.width / NUM_RANKS_FILES) * followerShadowScalar).roundToInt()
         followerViewRadius = followerShadowSize / 2.0
 
-        boardViewArray = Array(NUM_RANKS_FILES) { Array(NUM_RANKS_FILES) { TextView(this) } }
+        boardViewArray = Array(NUM_RANKS_FILES) { Array(NUM_RANKS_FILES) { SquareImageView(this) } }
 
         turnTextView = findViewById(R.id.turnTextView)
         debugTextView = findViewById(R.id.debugView)
 
         // Dynamic GridLayout Generation adapted from:
         // https://stackoverflow.com/questions/14728157/dynamic-gridlayout
-        var tv: TextView
+        var iView: SquareImageView
 
         // loop must go from highest rank to lowest and across each file,
         // so the positions are added to the grid layout in the correct order
@@ -78,14 +79,14 @@ class MainActivity : AppCompatActivity() {
                 val pos = Position(file = File[file]!!, rank = rank)
 
                 // Create view using helper function
-                tv = createChessPieceView(game.board.get(pos))
+                iView = createChessPieceView(game.board.get(pos))
 
-                tv.setOnTouchListener { v, event ->
+                iView.setOnTouchListener { v, event ->
                     viewOnTouchListener(v, event, pos)
                 }
 
-                setColor(tv, game.board.get(pos).player)
-                setView(pos, tv)
+//                setColor(iView, game.board.get(pos).player)
+                setView(pos, iView)
 
                 // Border for debugging
                 // https://stackoverflow.com/a/62720394
@@ -102,16 +103,17 @@ class MainActivity : AppCompatActivity() {
                 val rowSpan = GridLayout.spec(GridLayout.UNDEFINED, 1, GridLayout.FILL, 1F)
                 val colSpan = GridLayout.spec(GridLayout.UNDEFINED, 1, GridLayout.FILL, 1F)
                 val params = GridLayout.LayoutParams(rowSpan, colSpan)
-                params.setGravity(Gravity.FILL) // Make the view take the entire grid square
-                boardGridLayout.addView(tv, params)
+                params.setGravity(Gravity.CENTER) // Make the view take the entire grid square
+                boardGridLayout.addView(iView, params)
             }
         }
 
         game.board.onSet = { position: Position, piece: ChessPiece ->
             if (position.valid) {
                 val view = boardViewArray[position.rank - 1][position.file.index]
-                view.text = piece.type.str
-                setColor(view, piece.player)
+//                view.text = piece.type.str
+//                setColor(view, piece.player)
+                resetViewDrawable(view, position)
             }
         }
 
@@ -149,13 +151,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun getView(position: Position): TextView? {
+    private fun getView(position: Position): SquareImageView? {
         return if (position.valid)
             boardViewArray[position.rank - 1][position.file.index]
         else null
     }
 
-    private fun setView(position: Position, view: TextView): Boolean {
+    private fun setView(position: Position, view: SquareImageView): Boolean {
         return if (position.valid) {
             boardViewArray[position.rank - 1][position.file.index] = view
             true
@@ -189,42 +191,50 @@ class MainActivity : AppCompatActivity() {
         boardViewArray[position.rank - 1][position.file.index].background = null
     }
 
-    private fun createChessPieceView(piece: ChessPiece): TextView {
-        val tv = TextView(this)
-        tv.text = piece.type.str
-        // tv.gravity = Gravity.CENTER // Center the text in the square
-        tv.gravity = Gravity.FILL
-        tv.textAlignment = TextView.TEXT_ALIGNMENT_CENTER
-        tv.textSize = 24F
-        tv.typeface = Typeface.MONOSPACE // https://stackoverflow.com/questions/12128331/how-to-change-fontfamily-of-textview-in-android
-        return tv
+    private fun resetViewDrawable(view: SquareImageView, position: Position) = resetViewDrawable(view, game.board.get(position))
+
+    private fun resetViewDrawable(view: SquareImageView, piece: ChessPiece) {
+        val id = piece.getDrawableID()
+        if (id != null) view.setImageResource(id)
+    }
+
+    private fun setEmptyDrawable(view: SquareImageView) {
+        view.setImageResource(R.drawable.chess_null)
+    }
+
+    private fun createChessPieceView(piece: ChessPiece): SquareImageView {
+        val view = SquareImageView(this)
+        resetViewDrawable(view, piece)
+        return view
     }
 
     @SuppressLint("ClickableViewAccessibility")
-    private fun createFollowerView(v: View, piece: ChessPiece): TextView {
-        val tv = createChessPieceView(piece)
-        mainLayout.addView(tv)
+    private fun createFollowerView(v: View, piece: ChessPiece): SquareImageView {
+        val view = createChessPieceView(piece)
+        mainLayout.addView(view)
         followerShadowSize = (followerShadowScalar * v.width).roundToInt()
-        tv.height = followerShadowSize
-        tv.width = followerShadowSize
-        tv.gravity = Gravity.CENTER
+//        view.height = followerShadowSize
+//        view.width = followerShadowSize
+//        view.gravity = Gravity.CENTER
 
         // Creating backdrop shadow
         val gd = createShadowDrawable()
-        tv.background = gd
-        tv.background.bounds = Rect(followerShadowSize, followerShadowSize, followerShadowSize, followerShadowSize)
+        view.background = gd
+        view.background.bounds = Rect(followerShadowSize, followerShadowSize, followerShadowSize, followerShadowSize)
 
-        setColor(tv, piece.player)
+//        setColor(view, piece.player)
+        resetViewDrawable(view, piece)
         followerViewRadius = followerShadowSize.toDouble() / 2.0
-        tv.x = v.x + boardGridLayout.x - followerViewRadius.toFloat()
-        tv.y = v.y + boardGridLayout.y - followerViewRadius.toFloat()
-        return tv
+        view.x = v.x + boardGridLayout.x - followerViewRadius.toFloat()
+        view.y = v.y + boardGridLayout.y - followerViewRadius.toFloat()
+        return view
     }
 
     private fun destroyFollowerView() {
         if (followerView != null) {
             // Destroy and reset for next use
-            setColor(followerView!!, Player.NONE)
+//            setColor(followerView!!, Player.NONE)
+            setEmptyDrawable(followerView!!)
             followerView!!.background = null
             followerView = null
         }
@@ -276,7 +286,8 @@ class MainActivity : AppCompatActivity() {
             MotionEvent.ACTION_MOVE -> {
                 if (game.isPieceSelected && pos == game.selectedPosition) {
                     // First, set this textview as invisible
-                    setColor(v as TextView, Player.NONE)
+//                    setColor(v as TextView, Player.NONE)
+                    setEmptyDrawable(v as SquareImageView)
 
                     // Create a new view to follow around the player's finger
                     if (followerView == null) {
@@ -294,7 +305,8 @@ class MainActivity : AppCompatActivity() {
                         followerView!!.y + followerViewRadius.toFloat() < boardGridLayout.y ||
                         followerView!!.y + followerViewRadius.toFloat() > (boardGridLayout.y + boardGridLayout.height)
                     ) {
-                        setColor(getView(pos) as TextView, game.selectedPiece.player)
+//                        setColor(getView(pos) as TextView, game.selectedPiece.player)
+                        getView(pos)?.let { resetViewDrawable(it, pos) }
                         destroyFollowerView()
                     }
                 }
@@ -316,7 +328,9 @@ class MainActivity : AppCompatActivity() {
                 // The player attempted to move onto one of their own pieces
                 if (!moved && (newPos == game.selectedPosition || game.board.get(newPos).player == game.turn)) {
                     if (game.selectedPosition.valid)
-                        setColor(getView(game.selectedPosition) as TextView, game.selectedPiece.player)
+                        resetViewDrawable(getView(game.selectedPosition)!!, game.selectedPiece)
+//                        setColor(getView(game.selectedPosition) as TextView, game.selectedPiece.player)
+
                 } else if (moved) {
                     debugTextView.text = "moved to $newPos: ${game.board.get(newPos)}"
                 }

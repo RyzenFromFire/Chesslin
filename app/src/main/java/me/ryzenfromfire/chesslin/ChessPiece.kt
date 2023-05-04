@@ -1,5 +1,6 @@
 package me.ryzenfromfire.chesslin
 
+import android.graphics.drawable.Drawable
 import me.ryzenfromfire.chesslin.ChessGame.Player
 import me.ryzenfromfire.chesslin.ChessBoard.Position
 
@@ -33,8 +34,31 @@ class ChessPiece(var type: PieceType = PieceType.NONE, val player: Player = Play
         }
     }
 
-    // TODO: Implement move checking (in progress)
-    // TODO: Can check if a move is blocked by checking game.board.get(position)
+    private val drawables = arrayOf(
+        R.drawable.chess_null,
+        R.drawable.chess_plt45,
+        R.drawable.chess_nlt45,
+        R.drawable.chess_blt45,
+        R.drawable.chess_rlt45,
+        R.drawable.chess_qlt45,
+        R.drawable.chess_klt45,
+        R.drawable.chess_pdt45,
+        R.drawable.chess_ndt45,
+        R.drawable.chess_bdt45,
+        R.drawable.chess_rdt45,
+        R.drawable.chess_qdt45,
+        R.drawable.chess_kdt45
+    )
+
+    private val NUM_PIECES = 6
+
+    fun getDrawableID(): Int? {
+        var idx = PieceType.values().indexOf(this.type)
+        if (this.player == Player.BLACK)
+            idx += NUM_PIECES
+        return drawables[idx]
+    }
+
     /**
      * Returns a list of positions that can be legally be reached by the piece at the specified position.
      * @param checkLegality: default true, set false to ignore legality of moves considered, and only consider if the move is possible.
