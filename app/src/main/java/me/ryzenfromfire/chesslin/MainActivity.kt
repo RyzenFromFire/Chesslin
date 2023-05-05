@@ -7,7 +7,10 @@
 package me.ryzenfromfire.chesslin
 
 import android.annotation.SuppressLint
+import android.graphics.Bitmap
+import android.graphics.Matrix
 import android.graphics.Rect
+import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.Gravity
@@ -16,8 +19,10 @@ import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toBitmap
 import androidx.gridlayout.widget.GridLayout
 import me.ryzenfromfire.chesslin.ChessBoard.Companion.NUM_RANKS_FILES
 import me.ryzenfromfire.chesslin.ChessGame.Player
@@ -184,11 +189,17 @@ class MainActivity : AppCompatActivity() {
 
     private fun resetViewDrawable(view: SquareImageView, piece: ChessPiece) {
         val id = piece.getDrawableID()
-        if (id != null) view.setImageResource(id)
-        if (boardFlipped && piece.player == Player.BLACK)
-            view.rotation = 180f
-        else
-            view.rotation = 0f
+
+        if (boardFlipped && piece.player == Player.BLACK) {
+            val matrix = Matrix()
+            matrix.preScale(1.0f, -1.0f)
+            val dwg = AppCompatResources.getDrawable(this, id)
+            val bmp = Bitmap.createBitmap(dwg!!.toBitmap(), 0, 0, dwg.intrinsicWidth, dwg.intrinsicHeight, matrix, true)
+            view.setImageBitmap(bmp)
+        } else {
+            view.setImageResource(id)
+        }
+
     }
 
     private fun setEmptyDrawable(view: SquareImageView) {

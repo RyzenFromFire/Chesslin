@@ -52,7 +52,7 @@ class ChessPiece(var type: PieceType = PieceType.NONE, val player: Player = Play
 
     private val NUM_PIECES = 6
 
-    fun getDrawableID(): Int? {
+    fun getDrawableID(): Int {
         var idx = PieceType.values().indexOf(this.type)
         if (this.player == Player.BLACK)
             idx += NUM_PIECES
