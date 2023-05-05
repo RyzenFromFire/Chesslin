@@ -65,12 +65,12 @@ class ChessPiece(var type: PieceType = PieceType.NONE, val player: Player = Play
      */
     fun getMovablePositions(game: ChessGame, start: Position, checkLegality: Boolean = true): MutableList<Position> {
         return when (this.type) {
-            PieceType.PAWN -> getPawnPositions(game, start)
-            PieceType.ROOK -> getRookPositions(game, start)
-            PieceType.BISHOP -> getBishopPositions(game, start)
-            PieceType.KNIGHT -> getKnightPositions(game, start)
-            PieceType.QUEEN -> getQueenPositions(game, start)
-            PieceType.KING -> getKingPositions(game, start)
+            PieceType.PAWN -> getPawnPositions(game, start, checkLegality)
+            PieceType.ROOK -> getRookPositions(game, start, checkLegality)
+            PieceType.BISHOP -> getBishopPositions(game, start, checkLegality)
+            PieceType.KNIGHT -> getKnightPositions(game, start, checkLegality)
+            PieceType.QUEEN -> getQueenPositions(game, start, checkLegality)
+            PieceType.KING -> getKingPositions(game, start, checkLegality)
             else -> mutableListOf<Position>()
         }
     }
@@ -249,8 +249,7 @@ class ChessPiece(var type: PieceType = PieceType.NONE, val player: Player = Play
                 if (piece.player != player) {
                     list.addIfLegal(pos)
                     if (piece.player == player.opponent()) break
-                } else
-                    break
+                } else { break }
                 i++
             } while (pos.valid)
             return list

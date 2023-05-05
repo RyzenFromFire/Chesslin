@@ -227,7 +227,10 @@ class ChessGame {
         board.set(position = move.start, piece = ChessPiece.NULL, callOnSetListener = false)
 
         // test if specified player's king is in check; store result
-        val kingPos = when (player) {
+        // must consider if new (target/end) position places king in check if moving the king, instead of current position
+        val kingPos = if (move.piece.type == KING) {
+            move.end
+        } else when (player) {
             Player.WHITE -> whiteKingPos
             Player.BLACK -> blackKingPos
             else -> Position.NULL
@@ -324,16 +327,20 @@ class ChessGame {
         var pos: Position
         var piece: ChessPiece
         var i = 1
+        println("performing linear check for $player originating at $position with scalars {r $rightOffsetScalar, u $upOffsetScalar}, pieceType = $pieceType")
+        println(board.toString())
         do {
             pos = board.getRelativePosition(position = position, rightOffset = rightOffsetScalar * i, upOffset = upOffsetScalar * i)
             piece = board.get(pos)
-            if (piece.player == player.opponent())
+            println("lin check looping; pos: $pos with piece $piece")
+            println("piece.player = ${piece.player}, player = $player")
+            if (piece.player == player.opponent()) {
                 if (pieceType == ROOK) {
                     return (piece.type == ROOK || piece.type == QUEEN)
                 } else if (pieceType == BISHOP) {
                     return (piece.type == BISHOP || piece.type == QUEEN)
                 }
-            else if (piece.player == player) return false
+            } else if (piece.player == player) { return false }
             i++
         } while (pos.valid)
         return false

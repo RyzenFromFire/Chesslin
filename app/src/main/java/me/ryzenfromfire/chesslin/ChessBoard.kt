@@ -16,6 +16,23 @@ class ChessBoard {
 
     var onSet: ((Position, ChessPiece) -> Unit)? = null
 
+    override fun toString(): String {
+        val sb = StringBuilder()
+        var char: String
+        var piece: ChessPiece
+        for (rank in NUM_RANKS_FILES downTo 1) {
+            for (file in 0 until NUM_RANKS_FILES) {
+                piece = get(Position(rank = rank, file = File[file]!!))
+                char = piece.type.str
+                char = if (piece.player == Player.BLACK) char.lowercase()
+                else char.uppercase()
+                sb.append(char)
+            }
+            sb.append("\n")
+        }
+        return sb.toString()
+    }
+
     companion object {
         const val NUM_RANKS_FILES = 8
     }
