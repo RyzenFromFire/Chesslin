@@ -19,8 +19,8 @@ class ChessGame {
     var currentMove = 1
     lateinit var winner: Player
     var lastMove: ChessMove = ChessMove.NULL
-    private var whiteKingPos = Position("e1")
-    private var blackKingPos = Position("e8")
+    var whiteKingPos = Position("e1")
+    var blackKingPos = Position("e8")
 
     // Listeners for Controller (MainActivity)
     var onTurnChangedListener: (() -> Unit)? = null
@@ -128,7 +128,7 @@ class ChessGame {
         moves.add(move)
         currentMove++
         selectedPiece.hasMoved = true
-        switchTurn()
+
         if (move.piece.type == KING) {
             when (move.piece.player) {
                 Player.WHITE -> whiteKingPos = move.end
@@ -136,6 +136,19 @@ class ChessGame {
                 else -> Log.e("ChessGame", "Movement Error: non-player king movement detected")
             }
         }
+
+        // Update if a player is in check
+        // Should only happen to the player whose turn it is not
+        inCheck = if (isKingInCheck(Player.WHITE, whiteKingPos)) {
+            Player.WHITE
+        } else if (isKingInCheck(Player.BLACK, blackKingPos)) {
+            Player.BLACK
+        } else Player.NONE
+
+        if (inCheck == turn)
+            Log.e("ChessGame", "Player $turn moved into check!")
+
+        switchTurn()
         lastMove = move
 
         // Deselect position, empty list of movable positions, and invoke listener

@@ -56,6 +56,8 @@ class MainActivity : AppCompatActivity() {
     private var boardFlipped = true
 
     private lateinit var audioManager: AudioManager
+    private var lastSelectedPosition = Position.NULL
+    private val selectedPieceAlpha = 0.4f
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -125,6 +127,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         game.onSelectListener = {
+            val lv = getView(lastSelectedPosition)
+            lv?.background = null
             for (position in shadowedPositions) {
                 removePositionShadow(position)
             }
@@ -135,6 +139,11 @@ class MainActivity : AppCompatActivity() {
             }
             println("]")
             shadowedPositions = game.movablePositions
+
+            // Add an indicator to the selected position
+            val v = getView(game.selectedPosition)
+            v?.background = getSelectionDrawable(v!!)
+            lastSelectedPosition = game.selectedPosition
         }
 
         // https://stackoverflow.com/questions/7914518/how-to-play-default-tick-sound
@@ -147,6 +156,21 @@ class MainActivity : AppCompatActivity() {
             audioManager.playSoundEffect(AudioManager.FX_KEY_CLICK)
 //            println("White Piece Positions: [ ${game.board.whitePiecePositions.joinToString(" ")} ]")
 //            println("Black Piece Positions: [ ${game.board.blackPiecePositions.joinToString(" ")} ]")
+
+            when (game.inCheck) {
+                Player.WHITE -> {
+                    val v = getView(game.whiteKingPos)
+                    v?.background = getCheckDrawable(v!!)
+                }
+                Player.BLACK -> {
+                    val v = getView(game.blackKingPos)
+                    v?.background = getCheckDrawable(v!!)
+                }
+                else -> {
+                    getView(game.whiteKingPos)?.background = null
+                    getView(game.blackKingPos)?.background = null
+                }
+            }
         }
 
         // For Debug
@@ -295,8 +319,8 @@ class MainActivity : AppCompatActivity() {
             }
             MotionEvent.ACTION_MOVE -> {
                 if (game.isPieceSelected && pos == game.selectedPosition) {
-                    // First, set this textview as invisible
-                    setEmptyDrawable(v as SquareImageView)
+                    // First, set this view as partially invisible
+                    v.alpha = selectedPieceAlpha
 
                     // Create a new view to follow around the player's finger
                     if (followerView == null) {
@@ -343,5 +367,24 @@ class MainActivity : AppCompatActivity() {
             }
         }
         return true
+    }
+
+    // Currently these two functions are nearly identical, but in case I need to change their functionality, I'm keeping them separate
+    private fun getCheckDrawable(v: SquareImageView): GradientDrawable {
+        val gd = GradientDrawable()
+        gd.colors = intArrayOf(getColor(R.color.checkColor), getColor(android.R.color.transparent))
+        gd.gradientType = GradientDrawable.RADIAL_GRADIENT
+        gd.gradientRadius = 0.66f * v.width
+        gd.setStroke(0, getColor(android.R.color.transparent))
+        return gd
+    }
+
+    private fun getSelectionDrawable(v: SquareImageView): GradientDrawable {
+        val gd = GradientDrawable()
+        gd.colors = intArrayOf(getColor(R.color.selectionColor), getColor(android.R.color.transparent))
+        gd.gradientType = GradientDrawable.RADIAL_GRADIENT
+        gd.gradientRadius = 0.66f * v.width
+        gd.setStroke(0, getColor(android.R.color.transparent))
+        return gd
     }
 }
