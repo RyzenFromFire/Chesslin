@@ -202,7 +202,7 @@ class MainActivity : AppCompatActivity() {
     private fun addPositionShadow(position: Position): Boolean {
         return if (position.valid) {
             val v = boardViewArray[position.rank - 1][position.file.index]
-            v.background = createShadowDrawable()
+            v.background = getShadowDrawable()
             val size = if (game.board.isOccupied(position)) {
 //                println("SELECT OCCUPIED")
                 (selectPieceShadowScalar * v.width).roundToInt()
@@ -254,7 +254,7 @@ class MainActivity : AppCompatActivity() {
         followerShadowSize = (followerShadowScalar * v.width).roundToInt()
 
         // Creating backdrop shadow
-        val gd = createShadowDrawable()
+        val gd = getShadowDrawable()
         view.background = gd
         view.background.bounds = Rect(followerShadowSize, followerShadowSize, followerShadowSize, followerShadowSize)
 
@@ -274,12 +274,31 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun createShadowDrawable(color: Int = R.color.shadow): GradientDrawable {
+    private fun getShadowDrawable(color: Int = R.color.shadow): GradientDrawable {
         // Creating backdrop shadow
         // https://stackoverflow.com/questions/45608049/how-to-make-a-circular-drawable-with-stroke-programmatically/45608694
         val gd = GradientDrawable()
         gd.color = ContextCompat.getColorStateList(this, color)
         gd.shape = GradientDrawable.OVAL
+        return gd
+    }
+
+    // Currently these two functions are nearly identical, but in case I need to change their functionality, I'm keeping them separate
+    private fun getCheckDrawable(v: SquareImageView): GradientDrawable {
+        val gd = GradientDrawable()
+        gd.colors = intArrayOf(getColor(R.color.checkColor), getColor(android.R.color.transparent))
+        gd.gradientType = GradientDrawable.RADIAL_GRADIENT
+        gd.gradientRadius = 0.66f * v.width
+        gd.setStroke(0, getColor(android.R.color.transparent))
+        return gd
+    }
+
+    private fun getSelectionDrawable(v: SquareImageView): GradientDrawable {
+        val gd = GradientDrawable()
+        gd.colors = intArrayOf(getColor(R.color.selectionColor), getColor(android.R.color.transparent))
+        gd.gradientType = GradientDrawable.RADIAL_GRADIENT
+        gd.gradientRadius = 0.66f * v.width
+        gd.setStroke(0, getColor(android.R.color.transparent))
         return gd
     }
 
@@ -367,24 +386,5 @@ class MainActivity : AppCompatActivity() {
             }
         }
         return true
-    }
-
-    // Currently these two functions are nearly identical, but in case I need to change their functionality, I'm keeping them separate
-    private fun getCheckDrawable(v: SquareImageView): GradientDrawable {
-        val gd = GradientDrawable()
-        gd.colors = intArrayOf(getColor(R.color.checkColor), getColor(android.R.color.transparent))
-        gd.gradientType = GradientDrawable.RADIAL_GRADIENT
-        gd.gradientRadius = 0.66f * v.width
-        gd.setStroke(0, getColor(android.R.color.transparent))
-        return gd
-    }
-
-    private fun getSelectionDrawable(v: SquareImageView): GradientDrawable {
-        val gd = GradientDrawable()
-        gd.colors = intArrayOf(getColor(R.color.selectionColor), getColor(android.R.color.transparent))
-        gd.gradientType = GradientDrawable.RADIAL_GRADIENT
-        gd.gradientRadius = 0.66f * v.width
-        gd.setStroke(0, getColor(android.R.color.transparent))
-        return gd
     }
 }
