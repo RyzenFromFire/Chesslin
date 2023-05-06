@@ -22,7 +22,7 @@ class ChessMove(
     val legal: Boolean
         get() {
             if (game == null) return false
-            return (this.end in piece.getMovablePositions(game, start) || castle)
+            return (this.end in piece.getMovablePositions(game, start))
         }
     private var notation: String = ""
 
@@ -50,8 +50,8 @@ class ChessMove(
             if (castle) {
                 if (game.castleValid(piece = piece, start = start, end = end)) {
                     when (end.file) {
-                        C, A -> notation = "${num}. O-O-O"
-                        G, H -> notation = "${num}. O-O"
+                        C -> notation = "${num}. O-O-O"
+                        G -> notation = "${num}. O-O"
                         else -> valid = false // should be unreachable
                     }
                 } else valid = false
