@@ -363,6 +363,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             MotionEvent.ACTION_UP -> {
+                v.alpha = 1.0f
                 // Determine board position from current x/y coordinates
                 val newPos = getPositionFromCoordinates(v, event)
 
