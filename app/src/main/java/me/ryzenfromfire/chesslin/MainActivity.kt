@@ -10,7 +10,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Matrix
-import android.graphics.Rect
 import android.graphics.drawable.GradientDrawable
 import android.media.AudioManager
 import android.os.Bundle
@@ -46,12 +45,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var resetButton: Button
 
     private var followerView: SquareImageView? = null
-    private val followerShadowScalar = 1.5
-    private var followerShadowSize = 0
-    private var followerViewRadius = 0.0
+    private val followerViewScalar = 1.66f
+    private var followerViewRadius = 0.0f
 
-    private val selectEmptyShadowScalar = 0.5
-    private val selectPieceShadowScalar = 1.0
+    private val selectEmptyShadowScalar = 0.4f
+    private val selectPieceShadowScalar = 1.0f
     private var shadowedPositions = mutableListOf<Position>()
 
     private var boardFlipped = true
@@ -75,8 +73,7 @@ class MainActivity : AppCompatActivity() {
         boardGridLayout.columnCount = NUM_RANKS_FILES
         boardGridLayout.rowCount = NUM_RANKS_FILES
 
-        followerShadowSize = ((boardGridLayout.width / NUM_RANKS_FILES) * followerShadowScalar).roundToInt()
-        followerViewRadius = followerShadowSize / 2.0
+        followerViewRadius = ((boardGridLayout.width / NUM_RANKS_FILES) * followerViewScalar).roundToInt() / 4.0f
 
         boardViewArray = Array(NUM_RANKS_FILES) { Array(NUM_RANKS_FILES) { SquareImageView(this) } }
 
@@ -119,7 +116,7 @@ class MainActivity : AppCompatActivity() {
                 val rowSpan = GridLayout.spec(GridLayout.UNDEFINED, 1, GridLayout.FILL, 1F)
                 val colSpan = GridLayout.spec(GridLayout.UNDEFINED, 1, GridLayout.FILL, 1F)
                 val params = GridLayout.LayoutParams(rowSpan, colSpan)
-                params.setGravity(Gravity.CENTER) // Make the view take the entire grid square
+                params.setGravity(Gravity.CENTER)
                 boardGridLayout.addView(iView, params)
             }
         }
@@ -181,22 +178,24 @@ class MainActivity : AppCompatActivity() {
     private fun addPositionShadow(position: Position): Boolean {
         return if (position.valid) {
             val v = boardViewArray[position.rank - 1][position.file.index]
-            v.background = getShadowDrawable()
-            val size = if (game.board.isOccupied(position)) {
-//                println("SELECT OCCUPIED")
-                (selectPieceShadowScalar * v.width).roundToInt()
+            v.background = getShadowDrawable() // radius = 0.5f * size
+            val scalar = if (game.board.isOccupied(position)) {
+                selectPieceShadowScalar
             } else {
-//                println("SELECT EMPTY")
-                (selectEmptyShadowScalar * v.width).roundToInt()
+                selectEmptyShadowScalar
             }
-//            println(size)
-            v.background.bounds = Rect(size, size, size, size)
+
+            v.scaleX = scalar
+            v.scaleY = scalar
             true
         } else false
     }
 
     private fun removePositionShadow(position: Position) {
-        boardViewArray[position.rank - 1][position.file.index].background = null
+        val v = boardViewArray[position.rank - 1][position.file.index]
+        v.background = null
+        v.scaleX = 1.0f
+        v.scaleY = 1.0f
     }
 
     private fun resetViewDrawable(view: SquareImageView, position: Position) = resetViewDrawable(view, game.board.get(position))
@@ -228,20 +227,20 @@ class MainActivity : AppCompatActivity() {
 
     @SuppressLint("ClickableViewAccessibility")
     private fun createFollowerView(v: View, piece: ChessPiece): SquareImageView {
-        val view = createChessPieceView(piece)
-        mainLayout.addView(view)
-        followerShadowSize = (followerShadowScalar * v.width).roundToInt()
+        val followerView = createChessPieceView(piece)
+        mainLayout.addView(followerView)
 
         // Creating backdrop shadow
         val gd = getShadowDrawable()
-        view.background = gd
-        view.background.bounds = Rect(followerShadowSize, followerShadowSize, followerShadowSize, followerShadowSize)
+        followerView.background = gd
+        followerView.scaleX = followerViewScalar
+        followerView.scaleY = followerViewScalar
 
-        resetViewDrawable(view, piece)
-        followerViewRadius = followerShadowSize.toDouble() / 2.0
-        view.x = v.x + boardGridLayout.x - followerViewRadius.toFloat()
-        view.y = v.y + boardGridLayout.y - followerViewRadius.toFloat()
-        return view
+        resetViewDrawable(followerView, piece)
+        followerViewRadius = (followerViewScalar * v.width).roundToInt() / 4.0f
+        followerView.x = v.x + boardGridLayout.x - followerViewRadius
+        followerView.y = v.y + boardGridLayout.y - followerViewRadius
+        return followerView
     }
 
     private fun destroyFollowerView() {
@@ -314,12 +313,12 @@ class MainActivity : AppCompatActivity() {
         for (position in shadowedPositions) {
             removePositionShadow(position)
         }
-        print("positions: [ ")
+//        print("positions: [ ")
         for (position in game.movablePositions) {
             addPositionShadow(position)
-            print("$position ")
+//            print("$position ")
         }
-        println("]")
+//        println("]")
         shadowedPositions = game.movablePositions
 
         // Add an indicator to the selected position
@@ -392,15 +391,15 @@ class MainActivity : AppCompatActivity() {
                     }
 
                     // Follow the player's finger
-                    followerView!!.x = v.x + event.x + boardGridLayout.x - followerViewRadius.toFloat()
-                    followerView!!.y = v.y + event.y + boardGridLayout.y - followerViewRadius.toFloat()
+                    followerView!!.x = v.x + event.x + boardGridLayout.x - followerViewRadius
+                    followerView!!.y = v.y + event.y + boardGridLayout.y - followerViewRadius
 
                     // Detect if the follower view has moved outside the board grid layout and reset if so
                     if (
-                        followerView!!.x + followerViewRadius.toFloat() < boardGridLayout.x ||
-                        followerView!!.x + followerViewRadius.toFloat() > (boardGridLayout.x + boardGridLayout.width) ||
-                        followerView!!.y + followerViewRadius.toFloat() < boardGridLayout.y ||
-                        followerView!!.y + followerViewRadius.toFloat() > (boardGridLayout.y + boardGridLayout.height)
+                        followerView!!.x + followerViewRadius < boardGridLayout.x ||
+                        followerView!!.x + followerViewRadius > (boardGridLayout.x + boardGridLayout.width) ||
+                        followerView!!.y + followerViewRadius < boardGridLayout.y ||
+                        followerView!!.y + followerViewRadius > (boardGridLayout.y + boardGridLayout.height)
                     ) {
                         getView(pos)?.let { resetViewDrawable(it, pos) }
                         destroyFollowerView()
