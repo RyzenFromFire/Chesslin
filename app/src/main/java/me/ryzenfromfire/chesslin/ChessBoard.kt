@@ -10,10 +10,11 @@ class ChessBoard {
     // Access Syntax: boardArray[rank][file]
     private val boardArray = Array(NUM_RANKS_FILES) { Array(NUM_RANKS_FILES) { ChessPiece() } }
 
-    // Lambda/Listener to override
-    // rank is 0-based
-    // var onSet = { rank0: Int, file: File, player: Player, piece: Piece -> print("${rank0}${file}: $player ${piece.str}")}
+    // Keep track of where each player's pieces are
+    val whitePiecePositions = mutableSetOf<Position>()
+    val blackPiecePositions = mutableSetOf<Position>()
 
+    // Lambda/Listener to override
     var onSet: ((Position, ChessPiece) -> Unit)? = null
 
     override fun toString(): String {
@@ -104,6 +105,23 @@ class ChessBoard {
             val rank0 = position.rank - 1
             boardArray[rank0][fileIdx] = piece
             if (callOnSetListener) onSet?.invoke(position, piece)
+
+            // Update position lists
+            when (piece.player) {
+                WHITE -> {
+                    // If `position` was set to a white piece, add that position to the appropriate set
+                    whitePiecePositions.add(position)
+                }
+                BLACK -> {
+                    // Same for black
+                    blackPiecePositions.add(position)
+                }
+                else -> {
+                    // If `position` was set to empty (ChessPiece.NULL), remove the position from either set if it exists.
+                    whitePiecePositions.remove(position)
+                    blackPiecePositions.remove(position)
+                }
+            }
             true
         } else false
     }

@@ -145,6 +145,8 @@ class MainActivity : AppCompatActivity() {
             game.onSelectListener?.invoke()
             switchTurn()
             audioManager.playSoundEffect(AudioManager.FX_KEY_CLICK)
+//            println("White Piece Positions: [ ${game.board.whitePiecePositions.joinToString(" ")} ]")
+//            println("Black Piece Positions: [ ${game.board.blackPiecePositions.joinToString(" ")} ]")
         }
 
         // For Debug
