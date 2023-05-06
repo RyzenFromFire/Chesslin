@@ -237,12 +237,16 @@ class ChessPiece(var type: PieceType = PieceType.NONE, val player: Player = Play
                 }
                 val startPos = Position(rank = rank, file = ChessBoard.File.E)
                 val queensideEndPos = Position(rank = rank, file = ChessBoard.File.C)
+                val queensideRookPos = Position(rank = rank, file = ChessBoard.File.A)
                 val kingsideEndPos = Position(rank = rank, file = ChessBoard.File.G)
+                val kingsideRookPos = Position(rank = rank, file = ChessBoard.File.H)
                 if (rank != 0) {
                     if (game.castleValid(piece, startPos, queensideEndPos)) {
                         positions.addIfLegal(queensideEndPos, checkLegality)
+                        positions.addIfLegal(queensideRookPos, false)
                     } else if (game.castleValid(piece, startPos, kingsideEndPos)) {
                         positions.addIfLegal(kingsideEndPos, checkLegality)
+                        positions.addIfLegal(kingsideRookPos, false)
                     }
                 }
             }

@@ -5,6 +5,7 @@ import me.ryzenfromfire.chesslin.ChessPiece.PieceType
 import me.ryzenfromfire.chesslin.ChessPiece.PieceType.*
 import me.ryzenfromfire.chesslin.ChessBoard.File.Companion.fileNames
 import me.ryzenfromfire.chesslin.ChessBoard.Position
+import me.ryzenfromfire.chesslin.ChessBoard.File
 
 class ChessGame {
     var turn = Player.WHITE
@@ -47,6 +48,7 @@ class ChessGame {
      * Returns true if a valid piece of the player whose turn it is was selected, and false otherwise.
      */
     fun select(pos: Position): Boolean {
+        if (selectedPosition == pos) return isPieceSelected // if the selected piece hasn't changed, do nothing
         if (pos.valid && board.get(pos).player == turn) {
             println("SELECTED: plr: ${board.get(pos).player}, turn: $turn, pos valid: ${pos.valid}")
             isPieceSelected = true
@@ -113,10 +115,11 @@ class ChessGame {
         if (!isPieceSelected) return MoveResult.NO_PIECE_SELECTED
         if (!end.valid) return MoveResult.END_POSITION_INVALID
         if (end == selectedPosition) return MoveResult.SAME_START_END_POS
-        if (board.get(end).player == selectedPiece.player) return MoveResult.MOVE_ONTO_OWN_PIECE
 
         // Generate move based on selected position
         val move = getMove(end)
+
+        if (board.get(end).player == selectedPiece.player) return MoveResult.MOVE_ONTO_OWN_PIECE
 
         if (!move.valid) return MoveResult.MOVE_INVALID
         if (!move.legal) return MoveResult.MOVE_ILLEGAL
@@ -134,13 +137,13 @@ class ChessGame {
             var dir = 0
             var rookOffset = 0
             when (end.file) {
-                ChessBoard.File.C -> {
+                File.C, File.A -> {
                     dir = 1 // right of king, when castling queenside
                     rookOffset = -4
                     // TODO: consider adding additional check like so:
                     // if (!queensideCastlePossible(move.piece, move.start, move.end)) return MoveResult.MOVE_ILLEGAL
                 }
-                ChessBoard.File.G -> {
+                File.G, File.H -> {
                     dir = -1 // left of king, when castling kingside
                     rookOffset = 3
                 }
@@ -445,8 +448,8 @@ class ChessGame {
             start.rank == end.rank &&
             piece.type == KING &&
             !piece.hasMoved &&
-            start.file == ChessBoard.File.E &&
-            (end.file == ChessBoard.File.C || end.file == ChessBoard.File.G) &&
+            start.file == File.E &&
+            (end.file == File.C || end.file == File.G) &&
             ((start.rank == 1 && piece.player == Player.WHITE) || (start.rank == 8 && piece.player == Player.BLACK)) &&
             (queensideCastlePossible(piece, start, end) || kingsideCastlePossible(piece, start, end))
         )
@@ -460,7 +463,7 @@ class ChessGame {
      */
     private fun queensideCastlePossible(piece: ChessPiece, start: Position, end: Position): Boolean {
         println("Checking if queenside castle is possible {piece=$piece, start=$start, end=$end}")
-        if (end.file == ChessBoard.File.C) return false
+        if (end.file != File.C) return false
         val rookPos = board.getRelativePosition(start, -4, 0)
         println("rookPos: $rookPos, rook has moved: ${board.get(rookPos).hasMoved}")
         if (board.get(rookPos).hasMoved) return false
@@ -469,10 +472,14 @@ class ChessGame {
             board.getRelativePosition(start, -2, 0),
             board.getRelativePosition(start, -3, 0),
         )
+        println("positions: [ ${positions.joinToString(" ")} ]")
+        var testMove: ChessMove
+        var checkedAfterMove: Boolean
         // Test if the king would be in check in each position, as castling through check is invalid
         for (pos in positions) {
+            println("testing $pos, isOccupied?=${board.isOccupied(pos)}")
             if (board.isOccupied(pos)) return false
-            val testMove = ChessMove(
+            testMove = ChessMove(
                 game = this,
                 num = ChessMove.NUM_TEST_MOVE,
                 piece = piece,
@@ -482,8 +489,13 @@ class ChessGame {
                 promotion = NONE,
                 castle = false
             )
-            if (isCheckedAfterMove(piece.player, testMove)) return false
+            println("test move: $testMove")
+            println("test move is valid? ${testMove.valid}")
+            checkedAfterMove = isCheckedAfterMove(piece.player, testMove)
+            println("checked after test move? $checkedAfterMove")
+            if (checkedAfterMove) return false
         }
+        println("queenside castle valid (returning true)")
         return true
     }
 
@@ -495,7 +507,7 @@ class ChessGame {
      */
     private fun kingsideCastlePossible(piece: ChessPiece, start: Position, end: Position): Boolean {
         println("Checking if kingside castle is possible {piece=$piece, start=$start, end=$end}")
-        if (end.file == ChessBoard.File.H) return false
+        if (end.file != File.G) return false
         val rookPos = board.getRelativePosition(start, +3, 0)
         println("rookPos: $rookPos, rook has moved: ${board.get(rookPos).hasMoved}")
         if (board.get(rookPos).hasMoved) return false
@@ -503,10 +515,14 @@ class ChessGame {
             board.getRelativePosition(start, +1, 0),
             board.getRelativePosition(start, +2, 0)
         )
+        println("positions: [ ${positions.joinToString(" ")} ]")
         // Test if the king would be in check in each position, as castling through check is invalid
+        var testMove: ChessMove
+        var checkedAfterMove: Boolean
         for (pos in positions) {
+            println("testing $pos, isOccupied?=${board.isOccupied(pos)}")
             if (board.isOccupied(pos)) return false
-            val testMove = ChessMove(
+            testMove = ChessMove(
                 game = this,
                 num = ChessMove.NUM_TEST_MOVE,
                 piece = piece,
@@ -516,8 +532,13 @@ class ChessGame {
                 promotion = NONE,
                 castle = false
             )
-            if (isCheckedAfterMove(piece.player, testMove)) return false
+            println("test move: $testMove")
+            println("test move is valid? ${testMove.valid}")
+            checkedAfterMove = isCheckedAfterMove(piece.player, testMove)
+            println("checked after test move? $checkedAfterMove")
+            if (checkedAfterMove) return false
         }
+        println("kingside castle valid (returning true)")
         return true
     }
 }

@@ -352,12 +352,35 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // Logic to allow selecting rook when castling
+    private fun remapEndIfCastlingOntoRook(end: Position): Position {
+        val kingPos = when (game.turn) {
+            Player.WHITE -> game.whiteKingPos
+            Player.BLACK -> game.blackKingPos
+            else -> Position.NULL
+        }
+        val king = game.board.get(kingPos)
+        if (game.selectedPosition == kingPos &&
+            !king.hasMoved &&
+            !game.board.get(end).hasMoved
+        ) {
+            if (end.file == File.H) {
+                println("REMAPPING FILE TO G")
+                return Position(rank = end.rank, file = File.G)
+            } else if (end.file == File.A) {
+                return Position(rank = end.rank, file = File.C)
+            }
+        }
+        return end
+    }
+
     private fun onTouchCallback(v: View, event: MotionEvent, pos: Position): Boolean {
         val piece = game.board.get(pos)
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
-                game.select(pos)
-                debugTextView.text = "selected $pos: ${game.board.get(pos)}" // TODO: Debug; remove
+                val newPos = remapEndIfCastlingOntoRook(pos)
+                game.select(newPos)
+                debugTextView.text = "selected $newPos: ${game.board.get(pos)}" // TODO: Debug; remove
             }
             MotionEvent.ACTION_MOVE -> {
                 if (game.isPieceSelected && pos == game.selectedPosition) {
@@ -388,7 +411,8 @@ class MainActivity : AppCompatActivity() {
             MotionEvent.ACTION_UP -> {
                 v.alpha = 1.0f
                 // Determine board position from current x/y coordinates
-                val newPos = getPositionFromCoordinates(v, event)
+                var newPos = getPositionFromCoordinates(v, event)
+                newPos = remapEndIfCastlingOntoRook(newPos)
 
                 destroyFollowerView()
 

@@ -22,12 +22,14 @@ class ChessMove(
     val legal: Boolean
         get() {
             if (game == null) return false
-            return (this.end in piece.getMovablePositions(game, start))
+            return (this.end in piece.getMovablePositions(game, start) || castle)
         }
     private var notation: String = ""
 
     init {
-        if (game == null) valid = false else {
+        if (game == null) {
+            valid = false
+        } else {
             if (!start.valid || !end.valid) valid = false
 
             // Check if moves have gone out of sync (unless it is a testing move)
@@ -48,8 +50,8 @@ class ChessMove(
             if (castle) {
                 if (game.castleValid(piece = piece, start = start, end = end)) {
                     when (end.file) {
-                        C -> notation = "${num}. O-O-O"
-                        G -> notation = "${num}. O-O"
+                        C, A -> notation = "${num}. O-O-O"
+                        G, H -> notation = "${num}. O-O"
                         else -> valid = false // should be unreachable
                     }
                 } else valid = false
@@ -67,7 +69,7 @@ class ChessMove(
     override fun toString(): String {
         if (!valid) return "ERROR"
         // Ex. White R on a1 to a4 with capture
-        var str = "{${piece.player.str} ${piece.type.str} on $start to $end"
+        var str = "{${piece.player.str} ${piece.type.fullStr} on $start to $end}"
         if (capture != ChessPiece.NULL) str += " with capture"
         return str
     }
