@@ -26,6 +26,7 @@ class ChessGame {
     var onTurnChangedListener: (() -> Unit)? = null
     var onMoveListener: (() -> Unit)? = null
     var onSelectListener: (() -> Unit)? = null
+    var onCheckmateListener: ((Player) -> Unit)? = null // Player passed is the player who has been checkmated
 
     enum class Player(val str: String) {
         NONE("None"),
@@ -156,6 +157,9 @@ class ChessGame {
         isPieceSelected = false
         movablePositions = mutableListOf()
         onMoveListener?.invoke()
+
+        checkIfMate()
+
         return MoveResult.MOVE_GOOD
     }
 
@@ -357,5 +361,22 @@ class ChessGame {
             i++
         } while (pos.valid)
         return false
+    }
+
+    private fun checkIfMate(): Boolean {
+        if (inCheck == Player.NONE) return false
+        val positions = when (inCheck) {
+            Player.WHITE -> board.whitePiecePositions.toList()
+            else -> board.blackPiecePositions.toList()
+        }
+        var temp: MutableList<Position>
+        for (pos in positions) {
+            temp = board.get(pos).getMovablePositions(this, pos, true)
+            // If there is a legal move, it is not checkmate
+            if (temp.isNotEmpty()) return false
+        }
+        // At this point, all of the player's positions have been checked, and there are no legal moves, so it is checkmate.
+        onCheckmateListener?.invoke(inCheck)
+        return true
     }
 }

@@ -19,6 +19,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -59,6 +60,8 @@ class MainActivity : AppCompatActivity() {
     private var lastSelectedPosition = Position.NULL
     private val selectedPieceAlpha = 0.4f
 
+    private lateinit var dialogBuilder: AlertDialog.Builder
+
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -80,6 +83,8 @@ class MainActivity : AppCompatActivity() {
         turnTextView = findViewById(R.id.turnTextView)
         debugTextView = findViewById(R.id.debugView)
 
+        dialogBuilder = AlertDialog.Builder(this)
+
         // Dynamic GridLayout Generation adapted from:
         // https://stackoverflow.com/questions/14728157/dynamic-gridlayout
         var iView: SquareImageView
@@ -94,7 +99,7 @@ class MainActivity : AppCompatActivity() {
                 iView = createChessPieceView(game.board.get(pos))
 
                 iView.setOnTouchListener { v, event ->
-                    viewOnTouchListener(v, event, pos)
+                    onTouchCallback(v, event, pos)
                 }
 
                 setView(pos, iView)
@@ -127,57 +132,31 @@ class MainActivity : AppCompatActivity() {
         }
 
         game.onSelectListener = {
-            val lv = getView(lastSelectedPosition)
-            lv?.background = null
-            for (position in shadowedPositions) {
-                removePositionShadow(position)
-            }
-            print("positions: [ ")
-            for (position in game.movablePositions) {
-                addPositionShadow(position)
-                print("$position ")
-            }
-            println("]")
-            shadowedPositions = game.movablePositions
-
-            // Add an indicator to the selected position
-            val v = getView(game.selectedPosition)
-            v?.background = getSelectionDrawable(v!!)
-            lastSelectedPosition = game.selectedPosition
+            onSelectCallback()
         }
 
         // https://stackoverflow.com/questions/7914518/how-to-play-default-tick-sound
         audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
+        // TODO: listener may not be necessary - could check for MOVE_GOOD in viewOnTouchListener when event UP and perform these actions then
+        // TODO: however, that may also be trying to do too much at once.
         game.onMoveListener = {
-            // remove position shadows. will not select any new positions since game.movablePositions is an empty list.
-            game.onSelectListener?.invoke()
-            switchTurn()
-            audioManager.playSoundEffect(AudioManager.FX_KEY_CLICK)
-//            println("White Piece Positions: [ ${game.board.whitePiecePositions.joinToString(" ")} ]")
-//            println("Black Piece Positions: [ ${game.board.blackPiecePositions.joinToString(" ")} ]")
+            onMoveCallback()
+        }
 
-            when (game.inCheck) {
-                Player.WHITE -> {
-                    val v = getView(game.whiteKingPos)
-                    v?.background = getCheckDrawable(v!!)
-                }
-                Player.BLACK -> {
-                    val v = getView(game.blackKingPos)
-                    v?.background = getCheckDrawable(v!!)
-                }
-                else -> {
-                    getView(game.whiteKingPos)?.background = null
-                    getView(game.blackKingPos)?.background = null
-                }
-            }
+        game.onCheckmateListener = { player ->
+            onCheckmateCallback(player)
         }
 
         // For Debug
         resetButton = findViewById(R.id.resetButton)
         resetButton.setOnClickListener {
-            this.recreate()
+            resetGame()
         }
+    }
+
+    private fun resetGame() {
+        this.recreate()
     }
 
     private fun getView(position: Position): SquareImageView? {
@@ -329,7 +308,51 @@ class MainActivity : AppCompatActivity() {
         return Position(rank = newRank, file = File[newFileIdx]!!)
     }
 
-    private fun viewOnTouchListener(v: View, event: MotionEvent, pos: Position): Boolean {
+    private fun onSelectCallback() {
+        val lv = getView(lastSelectedPosition)
+        lv?.background = null
+        for (position in shadowedPositions) {
+            removePositionShadow(position)
+        }
+        print("positions: [ ")
+        for (position in game.movablePositions) {
+            addPositionShadow(position)
+            print("$position ")
+        }
+        println("]")
+        shadowedPositions = game.movablePositions
+
+        // Add an indicator to the selected position
+        val v = getView(game.selectedPosition)
+        v?.background = getSelectionDrawable(v!!)
+        lastSelectedPosition = game.selectedPosition
+    }
+
+    private fun onMoveCallback() {
+        // remove position shadows. will not select any new positions since game.movablePositions is an empty list.
+        game.onSelectListener?.invoke()
+        switchTurn()
+        audioManager.playSoundEffect(AudioManager.FX_KEY_CLICK)
+//            println("White Piece Positions: [ ${game.board.whitePiecePositions.joinToString(" ")} ]")
+//            println("Black Piece Positions: [ ${game.board.blackPiecePositions.joinToString(" ")} ]")
+
+        when (game.inCheck) {
+            Player.WHITE -> {
+                val v = getView(game.whiteKingPos)
+                v?.background = getCheckDrawable(v!!)
+            }
+            Player.BLACK -> {
+                val v = getView(game.blackKingPos)
+                v?.background = getCheckDrawable(v!!)
+            }
+            else -> {
+                getView(game.whiteKingPos)?.background = null
+                getView(game.blackKingPos)?.background = null
+            }
+        }
+    }
+
+    private fun onTouchCallback(v: View, event: MotionEvent, pos: Position): Boolean {
         val piece = game.board.get(pos)
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
@@ -387,5 +410,16 @@ class MainActivity : AppCompatActivity() {
             }
         }
         return true
+    }
+
+    private fun onCheckmateCallback(player: Player) {
+        dialogBuilder.setTitle(getString(R.string.checkmate_dialog_title))
+        val text = StringBuilder()
+        text.append(player.opponent().str).append(" ").append(getString(R.string.player_victory_text))
+        dialogBuilder.setMessage(text)
+        dialogBuilder.setPositiveButton(R.string.new_game) { dialog, which ->
+            resetGame()
+        }
+        dialogBuilder.show()
     }
 }

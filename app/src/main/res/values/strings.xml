@@ -4,4 +4,7 @@
   <string name="placeholder_symbol">PL</string>
   <string name="turn_white">It\'s White\'s turn.</string>
   <string name="turn_black">It\'s Black\'s turn.</string>
+  <string name="checkmate_dialog_title">Checkmate</string>
+  <string name="player_victory_text">is victorious.</string>
+  <string name="new_game">New Game</string>
 </resources>
