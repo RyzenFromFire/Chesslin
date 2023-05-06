@@ -48,8 +48,6 @@ class MainActivity : AppCompatActivity() {
     private val followerViewScalar = 1.66f
     private var followerViewRadius = 0.0f
 
-    private val selectEmptyShadowScalar = 0.4f
-    private val selectPieceShadowScalar = 1.0f
     private var shadowedPositions = mutableListOf<Position>()
 
     private var boardFlipped = true
@@ -100,13 +98,6 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 setView(pos, iView)
-
-                // Border for debugging
-                // https://stackoverflow.com/a/62720394
-                // val shapeDrawable = MaterialShapeDrawable()
-                // shapeDrawable.fillColor = ContextCompat.getColorStateList(this,android.R.color.transparent)
-                // shapeDrawable.setStroke(1.0f, ContextCompat.getColor(this,R.color.black))
-                // tv.background = shapeDrawable
 
                 // Create the row and column specifications
                 // 'start' = UNDEFINED, that's fine.
@@ -178,24 +169,19 @@ class MainActivity : AppCompatActivity() {
     private fun addPositionShadow(position: Position): Boolean {
         return if (position.valid) {
             val v = boardViewArray[position.rank - 1][position.file.index]
-            v.background = getShadowDrawable() // radius = 0.5f * size
-            val scalar = if (game.board.isOccupied(position)) {
-                selectPieceShadowScalar
+            if (game.board.isOccupied(position)) {
+                v.background = getShadowDrawable()
             } else {
-                selectEmptyShadowScalar
+                // My alternative way of creating a smaller dot for empty squares (via scaling) resulted in only that dot being selectable, out of the entire square.
+                // Creating a dedicated drawable was the best solution I found.
+                v.background = AppCompatResources.getDrawable(this, R.drawable.select_empty_placeholder)
             }
-
-            v.scaleX = scalar
-            v.scaleY = scalar
             true
         } else false
     }
 
     private fun removePositionShadow(position: Position) {
-        val v = boardViewArray[position.rank - 1][position.file.index]
-        v.background = null
-        v.scaleX = 1.0f
-        v.scaleY = 1.0f
+        boardViewArray[position.rank - 1][position.file.index].background = null
     }
 
     private fun resetViewDrawable(view: SquareImageView, position: Position) = resetViewDrawable(view, game.board.get(position))
@@ -266,8 +252,7 @@ class MainActivity : AppCompatActivity() {
         val gd = GradientDrawable()
         gd.colors = intArrayOf(getColor(R.color.checkColor), getColor(android.R.color.transparent))
         gd.gradientType = GradientDrawable.RADIAL_GRADIENT
-        gd.gradientRadius = 0.66f * v.width
-        gd.setStroke(0, getColor(android.R.color.transparent))
+        gd.gradientRadius = 0.5f * v.width
         return gd
     }
 
@@ -275,8 +260,7 @@ class MainActivity : AppCompatActivity() {
         val gd = GradientDrawable()
         gd.colors = intArrayOf(getColor(R.color.selectionColor), getColor(android.R.color.transparent))
         gd.gradientType = GradientDrawable.RADIAL_GRADIENT
-        gd.gradientRadius = 0.66f * v.width
-        gd.setStroke(0, getColor(android.R.color.transparent))
+        gd.gradientRadius = 0.5f * v.width
         return gd
     }
 
