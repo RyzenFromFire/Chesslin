@@ -17,7 +17,7 @@ class ChessMove(
     val promotion: PieceType = PieceType.NONE,
     val castle: Boolean = false
 ) {
-    val check: Player = Player.NONE // the player who is checked as a result of the move
+    var check: Player = Player.NONE // the player who is checked as a result of the move
     var valid: Boolean = true
     val legal: Boolean
         get() {
@@ -35,8 +35,6 @@ class ChessMove(
                 valid = false
             }
 
-            // TODO: look at the game state to determine if the move leads to a check, and update game.inCheck appropriately
-
             // Game End Notation
             if (game.gameOver) {
                 notation = when (game.winner) {
@@ -48,9 +46,9 @@ class ChessMove(
 
             // Castling Logic and Notation
             if (castle) {
-                if (castleValid(piece = piece, start = start, end = end)) {
+                if (game.castleValid(piece = piece, start = start, end = end)) {
                     when (end.file) {
-                        B -> notation = "${num}. O-O-O"
+                        C -> notation = "${num}. O-O-O"
                         G -> notation = "${num}. O-O"
                         else -> valid = false // should be unreachable
                     }
@@ -64,45 +62,6 @@ class ChessMove(
     companion object {
         val NULL = ChessMove(null, -1, ChessPiece.NULL, Position.NULL, Position.NULL)
         const val NUM_TEST_MOVE = -2
-
-        // The following functions consider multiple pieces in the context of a ChessMove, so they are not in the ChessPiece class
-
-        /**
-         * Determines if a castling move is valid given the start and end positions
-         * alongside a reference to the piece (assumed to be a king)
-         */
-        fun castleValid(piece: ChessPiece, start: Position, end: Position): Boolean {
-            return (
-                start.rank == end.rank &&
-                piece.type == KING &&
-                !piece.hasMoved &&
-                start.file == E &&
-                (end.file == B || end.file == G) &&
-                ((start.rank == 1 && piece.player == WHITE) || (start.rank == 8 && piece.player == BLACK))
-            )
-        }
-
-        /**
-         * Given a Position (at which it is assumed there is a pawn)
-         * and the game (from which the last move is retrieved),
-         * return the target Position if en passant is possible.
-         */
-        fun getEnPassantTarget(game: ChessGame, pos: Position): Position {
-            // Return null if pieces are not pawns or last move is invalid
-            if (game.board.get(pos).type != PAWN ||
-                !game.lastMove.valid ||
-                game.lastMove.piece.type != PAWN
-            ) return Position.NULL
-
-            // Return appropriate position based on if the last move ended to the left or right
-            val left = game.board.getRelativePosition(pos, -1, 0)
-            val right = game.board.getRelativePosition(pos, 1, 0)
-            return if (game.lastMove.end == left && game.board.get(left).hasJustMoved) {
-                game.board.getRelativePosition(pos, -1, 1)
-            } else if (game.lastMove.end == right && game.board.get(right).hasJustMoved) {
-                game.board.getRelativePosition(pos, 1, 1)
-            } else Position.NULL
-        }
     }
 
     override fun toString(): String {

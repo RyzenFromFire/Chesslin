@@ -84,10 +84,15 @@ class ChessGame {
      */
     private fun getMove(end: Position): ChessMove {
         val targetPiece = board.get(end)
-        val promotion = PieceType.NONE // TODO: Implement promotion logic if pawn reaches back rank
-        val castle =
-            false // TODO: Implement castling logic using ChessMove.castleValid().
+
+        // TODO: Implement promotion logic if pawn reaches back rank
+        val promotion = PieceType.NONE
+
+        // If castling is valid in the context of the specified end position, the move must be a castle
+        val castle = castleValid(selectedPiece, selectedPosition, end)
+
         val capture = targetPiece.player == selectedPiece.player.opponent()
+
         return ChessMove(
             game = this,
             num = currentMove,
@@ -118,9 +123,36 @@ class ChessGame {
 
         // At this point the move is good, so perform it
         // En Passant Handling
-        if (end == ChessMove.getEnPassantTarget(this, selectedPosition)) {
+        if (end == getEnPassantTarget(selectedPosition)) {
             val capturedPosition = board.getRelativePosition(end, 0, -1 * ChessPiece.getPawnDirection(selectedPiece.player))
             board.set(position = capturedPosition, piece = ChessPiece.NULL)
+        }
+
+        // Castling Handling
+        if (move.castle) {
+            // Direction to move the rook
+            var dir = 0
+            var rookOffset = 0
+            when (end.file) {
+                ChessBoard.File.C -> {
+                    dir = 1 // right of king, when castling queenside
+                    rookOffset = -4
+                    // TODO: consider adding additional check like so:
+                    // if (!queensideCastlePossible(move.piece, move.start, move.end)) return MoveResult.MOVE_ILLEGAL
+                }
+                ChessBoard.File.G -> {
+                    dir = -1 // left of king, when castling kingside
+                    rookOffset = 3
+                }
+                else -> {}
+            }
+            // If castle is true/valid, dir of 0 should be impossible
+            if (dir == 0) return MoveResult.MOVE_ILLEGAL
+            val rookStartPos = board.getRelativePosition(move.start, rookOffset, 0)
+            val rookEndPos = board.getRelativePosition(move.end, dir, 0)
+            val rookPiece = board.get(rookStartPos)
+            board.set(position = rookEndPos, piece = rookPiece)
+            board.set(position = rookStartPos, piece = ChessPiece.NULL)
         }
 
         board.set(position = move.end, piece = move.piece)
@@ -148,6 +180,8 @@ class ChessGame {
 
         if (inCheck == turn)
             Log.e("ChessGame", "Player $turn moved into check!")
+
+        move.check = inCheck
 
         switchTurn()
         lastMove = move
@@ -377,6 +411,113 @@ class ChessGame {
         }
         // At this point, all of the player's positions have been checked, and there are no legal moves, so it is checkmate.
         onCheckmateListener?.invoke(inCheck)
+        return true
+    }
+
+    /**
+     * Given a Position (at which it is assumed there is a pawn)
+     * and the game (from which the last move is retrieved),
+     * return the target Position if en passant is possible.
+     */
+    fun getEnPassantTarget(pos: Position): Position {
+        // Return null if pieces are not pawns or last move is invalid
+        if (board.get(pos).type != PAWN ||
+            !lastMove.valid ||
+            lastMove.piece.type != PAWN
+        ) return Position.NULL
+
+        // Return appropriate position based on if the last move ended to the left or right
+        val left = board.getRelativePosition(pos, -1, 0)
+        val right = board.getRelativePosition(pos, 1, 0)
+        return if (lastMove.end == left && board.get(left).hasJustMoved) {
+            board.getRelativePosition(pos, -1, 1)
+        } else if (lastMove.end == right && board.get(right).hasJustMoved) {
+            board.getRelativePosition(pos, 1, 1)
+        } else Position.NULL
+    }
+
+    /**
+     * Determines if a castling move is valid given the start and end positions
+     * alongside a reference to the piece (assumed to be a king)
+     */
+    fun castleValid(piece: ChessPiece, start: Position, end: Position): Boolean {
+        return (
+            start.rank == end.rank &&
+            piece.type == KING &&
+            !piece.hasMoved &&
+            start.file == ChessBoard.File.E &&
+            (end.file == ChessBoard.File.C || end.file == ChessBoard.File.G) &&
+            ((start.rank == 1 && piece.player == Player.WHITE) || (start.rank == 8 && piece.player == Player.BLACK)) &&
+            (queensideCastlePossible(piece, start, end) || kingsideCastlePossible(piece, start, end))
+        )
+    }
+
+    /**
+     * Checks the following items, and returns false if any of them are true:
+     * If the end file of the specified end position is not C, since that must be the ending file for a queenside castle
+     * If the queenside rook has moved, since castling is only possible when both the king and rook have not moved.
+     * If the king would have to move through check to castle.
+     */
+    private fun queensideCastlePossible(piece: ChessPiece, start: Position, end: Position): Boolean {
+        println("Checking if queenside castle is possible {piece=$piece, start=$start, end=$end}")
+        if (end.file == ChessBoard.File.C) return false
+        val rookPos = board.getRelativePosition(start, -4, 0)
+        println("rookPos: $rookPos, rook has moved: ${board.get(rookPos).hasMoved}")
+        if (board.get(rookPos).hasMoved) return false
+        val positions = arrayOf(
+            board.getRelativePosition(start, -1, 0),
+            board.getRelativePosition(start, -2, 0),
+            board.getRelativePosition(start, -3, 0),
+        )
+        // Test if the king would be in check in each position, as castling through check is invalid
+        for (pos in positions) {
+            if (board.isOccupied(pos)) return false
+            val testMove = ChessMove(
+                game = this,
+                num = ChessMove.NUM_TEST_MOVE,
+                piece = piece,
+                start = start,
+                end = pos,
+                capture = ChessPiece.NULL,
+                promotion = NONE,
+                castle = false
+            )
+            if (isCheckedAfterMove(piece.player, testMove)) return false
+        }
+        return true
+    }
+
+    /**
+     * Checks the following items, and returns false if any of them are true:
+     * If the end file of the specified end position is not G, since that must be the ending file for a kingside castle
+     * If the kingside rook has moved, since castling is only possible when both the king and rook have not moved.
+     * If the king would have to move through check to castle.
+     */
+    private fun kingsideCastlePossible(piece: ChessPiece, start: Position, end: Position): Boolean {
+        println("Checking if kingside castle is possible {piece=$piece, start=$start, end=$end}")
+        if (end.file == ChessBoard.File.H) return false
+        val rookPos = board.getRelativePosition(start, +3, 0)
+        println("rookPos: $rookPos, rook has moved: ${board.get(rookPos).hasMoved}")
+        if (board.get(rookPos).hasMoved) return false
+        val positions = arrayOf(
+            board.getRelativePosition(start, +1, 0),
+            board.getRelativePosition(start, +2, 0)
+        )
+        // Test if the king would be in check in each position, as castling through check is invalid
+        for (pos in positions) {
+            if (board.isOccupied(pos)) return false
+            val testMove = ChessMove(
+                game = this,
+                num = ChessMove.NUM_TEST_MOVE,
+                piece = piece,
+                start = start,
+                end = pos,
+                capture = ChessPiece.NULL,
+                promotion = NONE,
+                castle = false
+            )
+            if (isCheckedAfterMove(piece.player, testMove)) return false
+        }
         return true
     }
 }

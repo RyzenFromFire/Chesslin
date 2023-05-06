@@ -396,7 +396,7 @@ class MainActivity : AppCompatActivity() {
 
                 // Attempt to move to the new position
                 val moveResult = game.move(newPos)
-                println("moved: $moveResult")
+                println("move result: $moveResult")
 
                 // If the move was unsuccessful because of the following, reset:
                 if (moveResult == SAME_START_END_POS ||

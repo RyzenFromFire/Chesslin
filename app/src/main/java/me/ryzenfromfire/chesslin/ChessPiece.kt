@@ -178,7 +178,7 @@ class ChessPiece(var type: PieceType = PieceType.NONE, val player: Player = Play
             }
 
             // Add en passant target position if available
-            val enPassantTarget: Position = ChessMove.getEnPassantTarget(game, position)
+            val enPassantTarget: Position = game.getEnPassantTarget(position)
             if (enPassantTarget != Position.NULL)
                 positions.addIfLegal(enPassantTarget)
 
@@ -224,6 +224,29 @@ class ChessPiece(var type: PieceType = PieceType.NONE, val player: Player = Play
             positions.addIfLegal(-1, -1, checkLegality)
             positions.addIfLegal(-1,  0, checkLegality)
             positions.addIfLegal(-1, +1, checkLegality)
+
+            // Castling Logic
+            val piece = game.board.get(position)
+
+            // preliminary check to avoid computation if possible. technically redundant with castleValid, but kept for safety
+            if (!piece.hasMoved) {
+                val rank = when (piece.player) {
+                    Player.WHITE -> 1
+                    Player.BLACK -> 8
+                    else -> 0
+                }
+                val startPos = Position(rank = rank, file = ChessBoard.File.E)
+                val queensideEndPos = Position(rank = rank, file = ChessBoard.File.C)
+                val kingsideEndPos = Position(rank = rank, file = ChessBoard.File.G)
+                if (rank != 0) {
+                    if (game.castleValid(piece, startPos, queensideEndPos)) {
+                        positions.addIfLegal(queensideEndPos, checkLegality)
+                    } else if (game.castleValid(piece, startPos, kingsideEndPos)) {
+                        positions.addIfLegal(kingsideEndPos, checkLegality)
+                    }
+                }
+            }
+
             return positions
         }
 
