@@ -7,11 +7,12 @@
 package me.ryzenfromfire.chesslin
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Matrix
 import android.graphics.Rect
-import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
+import android.media.AudioManager
 import android.os.Bundle
 import android.view.Gravity
 import android.view.MotionEvent
@@ -32,6 +33,7 @@ import me.ryzenfromfire.chesslin.ChessGame.MoveResult.*
 import kotlin.math.roundToInt
 
 class MainActivity : AppCompatActivity() {
+    private lateinit var mainLayout: ConstraintLayout
     private lateinit var boardGridLayout: GridLayout
     private lateinit var boardViewArray: Array<Array<SquareImageView>>
     private lateinit var game: ChessGame
@@ -46,11 +48,14 @@ class MainActivity : AppCompatActivity() {
     private val followerShadowScalar = 1.5
     private var followerShadowSize = 0
     private var followerViewRadius = 0.0
-    private lateinit var mainLayout: ConstraintLayout
+
     private val selectEmptyShadowScalar = 0.5
     private val selectPieceShadowScalar = 1.0
     private var shadowedPositions = mutableListOf<Position>()
+
     private var boardFlipped = true
+
+    private lateinit var audioManager: AudioManager
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -132,10 +137,14 @@ class MainActivity : AppCompatActivity() {
             shadowedPositions = game.movablePositions
         }
 
+        // https://stackoverflow.com/questions/7914518/how-to-play-default-tick-sound
+        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+
         game.onMoveListener = {
             // remove position shadows. will not select any new positions since game.movablePositions is an empty list.
             game.onSelectListener?.invoke()
             switchTurn()
+            audioManager.playSoundEffect(AudioManager.FX_KEY_CLICK)
         }
 
         // For Debug
