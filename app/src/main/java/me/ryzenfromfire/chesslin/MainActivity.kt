@@ -365,7 +365,6 @@ class MainActivity : AppCompatActivity() {
             !game.board.get(end).hasMoved
         ) {
             if (end.file == File.H) {
-                println("REMAPPING FILE TO G")
                 return Position(rank = end.rank, file = File.G)
             } else if (end.file == File.A) {
                 return Position(rank = end.rank, file = File.C)
