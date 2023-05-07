@@ -15,7 +15,6 @@ import android.graphics.drawable.GradientDrawable
 import android.media.AudioManager
 import android.os.Bundle
 import android.view.*
-import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -39,9 +38,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var game: ChessGame
 
     private lateinit var turnTextView: TextView
-
-    // TODO: Remove; for debug only
-    private lateinit var debugTextView: TextView
 
     private var followerView: SquareImageView? = null
     private val followerViewScalar = 1.66f
@@ -78,7 +74,6 @@ class MainActivity : AppCompatActivity() {
         boardViewArray = Array(NUM_RANKS_FILES) { Array(NUM_RANKS_FILES) { SquareImageView(this) } }
 
         turnTextView = findViewById(R.id.turnTextView)
-        debugTextView = findViewById(R.id.debugView)
 
         dialogBuilder = AlertDialog.Builder(this)
 
@@ -431,7 +426,6 @@ class MainActivity : AppCompatActivity() {
             MotionEvent.ACTION_DOWN -> {
                 val newPos = remapEndIfCastlingOntoRook(pos)
                 game.select(newPos)
-                debugTextView.text = "selected $newPos: ${game.board.get(pos)}" // TODO: Debug; remove
             }
             MotionEvent.ACTION_MOVE -> {
                 if (game.isPieceSelected && pos == game.selectedPosition) {
@@ -479,9 +473,8 @@ class MainActivity : AppCompatActivity() {
                     moveResult == MOVE_ILLEGAL) {
                     if (game.selectedPosition.valid)
                         resetViewDrawable(getView(game.selectedPosition)!!, game.selectedPiece)
-                } else if (moveResult == MOVE_GOOD) {
-                    debugTextView.text = "moved to $newPos: ${game.board.get(newPos)}"
-                }
+                } else /*if (moveResult == MOVE_GOOD) {
+                }*/
                 updateCheckViewBackground()
             }
         }
