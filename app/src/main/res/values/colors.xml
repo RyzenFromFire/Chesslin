@@ -15,6 +15,7 @@
   <color name="transparent">#00777777</color>
   <color name="shadow">#44000000</color>
   <color name="highlight">#CCFFF59D</color>
+  <color name="highlight_dark">#80FFF59D</color>
   <color name="checkColor">#DD1E1E</color>
   <color name="selectionColor">#392BD3FD</color>
 </resources>

@@ -364,7 +364,7 @@ class MainActivity : AppCompatActivity() {
     private fun addPositionHighlight(position: Position): Boolean {
         return if (position.valid) {
             val v = boardViewArray[position.rank - 1][position.file.index]
-            v.background = getHighlightDrawable(v)
+            v.background = getHighlightDrawable(v, position)
             highlightedPositions.add(position)
             true
         } else false
@@ -374,12 +374,19 @@ class MainActivity : AppCompatActivity() {
         boardViewArray[position.rank - 1][position.file.index].background = null
     }
 
-    private fun getHighlightDrawable(v: View): GradientDrawable {
+    private fun getHighlightDrawable(view: View, position: Position): GradientDrawable {
         val gd = GradientDrawable()
-        gd.colors = intArrayOf(getColor(R.color.highlight), getColor(android.R.color.transparent))
+        val color = if (isSquareDark(position)) getColor(R.color.highlight_dark) else getColor(R.color.highlight)
+        gd.colors = intArrayOf(color, getColor(android.R.color.transparent))
         gd.gradientType = GradientDrawable.RADIAL_GRADIENT
-        gd.gradientRadius = 0.5f * v.width
+        gd.gradientRadius = 0.5f * view.width
         return gd
+    }
+
+    private fun isSquareDark(position: Position): Boolean {
+        val rank = position.rank
+        val file = position.file.index + 1
+        return (rank % 2 == file % 2)
     }
 
     private fun updateCheckViewBackground() {
