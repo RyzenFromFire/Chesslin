@@ -1,6 +1,99 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  xmlns:tools="http://schemas.android.com/tools"
   android:layout_width="match_parent"
-  android:layout_height="match_parent">
+  android:layout_height="wrap_content">
+
+  <LinearLayout
+    android:id="@+id/promotionTextLayout1"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    android:layout_marginStart="16dp"
+    android:layout_marginTop="16dp"
+    android:layout_marginEnd="16dp"
+    android:layout_marginBottom="16dp"
+    android:orientation="horizontal"
+    android:rotation="-90"
+    android:textAlignment="center"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintEnd_toStartOf="@+id/promotionViewLayout"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toTopOf="parent">
+
+    <TextView
+      android:id="@+id/promotionText"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_marginTop="32dp"
+      android:layout_marginBottom="32dp"
+      android:text="Promotion!"
+      android:textAlignment="center" />
+
+  </LinearLayout>
+
+  <LinearLayout
+    android:id="@+id/promotionViewLayout"
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintEnd_toStartOf="@id/promotionTextLayout2"
+    app:layout_constraintStart_toEndOf="@id/promotionTextLayout1"
+    app:layout_constraintTop_toTopOf="parent">
+
+    <me.ryzenfromfire.chesslin.SquareImageView
+      android:id="@+id/promotionViewQueen"
+      android:layout_width="match_parent"
+      android:layout_height="101dp"
+      android:layout_weight="1"
+      app:srcCompat="@drawable/chess_qlt45" />
+
+    <me.ryzenfromfire.chesslin.SquareImageView
+      android:id="@+id/promotionViewRook"
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:layout_weight="1"
+      app:srcCompat="@drawable/chess_rlt45" />
+
+    <me.ryzenfromfire.chesslin.SquareImageView
+      android:id="@+id/promotionViewKnight"
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:layout_weight="1"
+      app:srcCompat="@drawable/chess_nlt45" />
+
+    <me.ryzenfromfire.chesslin.SquareImageView
+      android:id="@+id/promotionViewBishop"
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:layout_weight="1"
+      app:srcCompat="@drawable/chess_blt45" />
+  </LinearLayout>
+
+  <LinearLayout
+    android:id="@+id/promotionTextLayout2"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="16dp"
+    android:layout_marginTop="16dp"
+    android:layout_marginEnd="16dp"
+    android:layout_marginBottom="16dp"
+    android:orientation="horizontal"
+    android:rotation="90"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintStart_toEndOf="@id/promotionViewLayout"
+    app:layout_constraintTop_toTopOf="parent">
+
+    <TextView
+      android:id="@+id/promotionText2"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_marginTop="32dp"
+      android:layout_marginBottom="32dp"
+      android:text="Choose\n a piece!"
+      android:textAlignment="center" />
+  </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
