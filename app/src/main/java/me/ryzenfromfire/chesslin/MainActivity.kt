@@ -347,10 +347,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun onMoveCallback() {
+        audioManager.playSoundEffect(AudioManager.FX_KEY_CLICK)
+
         // remove position shadows. will not select any new positions since game.movablePositions is an empty list.
         game.onSelectListener?.invoke()
+
         switchTurn()
-        audioManager.playSoundEffect(AudioManager.FX_KEY_CLICK)
 
         // remove old highlights
         for (position in highlightedPositions) {
@@ -360,7 +362,6 @@ class MainActivity : AppCompatActivity() {
         // add new highlights
         addPositionHighlight(game.lastMove.start)
         addPositionHighlight(game.lastMove.end)
-
 
 //        updateCheck()
     }
@@ -379,16 +380,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun getHighlightDrawable(v: View): GradientDrawable {
-        // Creating backdrop shadow
-        // https://stackoverflow.com/questions/45608049/how-to-make-a-circular-drawable-with-stroke-programmatically/45608694
         val gd = GradientDrawable()
-//        gd.color = ContextCompat.getColorStateList(this, R.color.highlight)
         gd.colors = intArrayOf(getColor(R.color.highlight), getColor(android.R.color.transparent))
         gd.gradientType = GradientDrawable.RADIAL_GRADIENT
         gd.gradientRadius = 0.5f * v.width
-//        gd.shape = GradientDrawable.RECTANGLE
-
-//        gd.setStroke(1, getColor(R.color.black))
         return gd
     }
 
@@ -508,6 +503,4 @@ class MainActivity : AppCompatActivity() {
         promotionDialog.setPlayer(player, boardFlipped)
         promotionDialog.show()
     }
-
-
 }
