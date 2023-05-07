@@ -30,6 +30,7 @@ import me.ryzenfromfire.chesslin.ChessGame.Player
 import me.ryzenfromfire.chesslin.ChessBoard.Position
 import me.ryzenfromfire.chesslin.ChessBoard.File
 import me.ryzenfromfire.chesslin.ChessGame.MoveResult.*
+import me.ryzenfromfire.chesslin.ChessPiece.PieceType
 import kotlin.math.roundToInt
 
 class MainActivity : AppCompatActivity() {
@@ -57,6 +58,8 @@ class MainActivity : AppCompatActivity() {
     private val selectedPieceAlpha = 0.4f
 
     private lateinit var dialogBuilder: AlertDialog.Builder
+    private lateinit var promotionDialog: PromotionDialog
+    private var promotionPiece = PieceType.NONE
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -126,14 +129,23 @@ class MainActivity : AppCompatActivity() {
         // https://stackoverflow.com/questions/7914518/how-to-play-default-tick-sound
         audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
-        // TODO: listener may not be necessary - could check for MOVE_GOOD in viewOnTouchListener when event UP and perform these actions then
-        // TODO: however, that may also be trying to do too much at once.
         game.onMoveListener = {
             onMoveCallback()
         }
 
         game.onCheckmateListener = { player ->
             onCheckmateCallback(player)
+        }
+
+        promotionDialog = PromotionDialog(this)
+        promotionDialog.onPromotionListener = {
+            println("selected piece: $promotionPiece")
+            game.promote(it)
+            updateCheckViewBackground()
+        }
+
+        game.onPromotionListener = { player ->
+            onPromotionCallback(player)
         }
 
         // For Debug
@@ -319,6 +331,10 @@ class MainActivity : AppCompatActivity() {
 //            println("White Piece Positions: [ ${game.board.whitePiecePositions.joinToString(" ")} ]")
 //            println("Black Piece Positions: [ ${game.board.blackPiecePositions.joinToString(" ")} ]")
 
+//        updateCheck()
+    }
+
+    private fun updateCheckViewBackground() {
         when (game.inCheck) {
             Player.WHITE -> {
                 val v = getView(game.whiteKingPos)
@@ -413,6 +429,7 @@ class MainActivity : AppCompatActivity() {
                 } else if (moveResult == MOVE_GOOD) {
                     debugTextView.text = "moved to $newPos: ${game.board.get(newPos)}"
                 }
+                updateCheckViewBackground()
             }
         }
         return true
@@ -427,5 +444,10 @@ class MainActivity : AppCompatActivity() {
             resetGame()
         }
         dialogBuilder.show()
+    }
+
+    private fun onPromotionCallback(player: Player) {
+        promotionDialog.setPlayer(player, boardFlipped)
+        promotionDialog.show()
     }
 }

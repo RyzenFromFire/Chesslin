@@ -7,4 +7,6 @@
   <string name="checkmate_dialog_title">Checkmate</string>
   <string name="player_victory_text">is victorious.</string>
   <string name="new_game">New Game</string>
+  <string name="promotion_text_1">Promotion!</string>
+  <string name="promotion_text_2">Choose\na piece!</string>
 </resources>

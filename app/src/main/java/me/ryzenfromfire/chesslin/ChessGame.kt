@@ -28,6 +28,7 @@ class ChessGame {
     var onMoveListener: (() -> Unit)? = null
     var onSelectListener: (() -> Unit)? = null
     var onCheckmateListener: ((Player) -> Unit)? = null // Player passed is the player who has been checkmated
+    var onPromotionListener: ((Player) -> Unit)? = null
 
     enum class Player(val str: String) {
         NONE("None"),
@@ -87,13 +88,17 @@ class ChessGame {
     private fun getMove(end: Position): ChessMove {
         val targetPiece = board.get(end)
 
-        // TODO: Implement promotion logic if pawn reaches back rank
-        val promotion = PieceType.NONE
-
         // If castling is valid in the context of the specified end position, the move must be a castle
         val castle = castleValid(selectedPiece, selectedPosition, end)
 
         val capture = targetPiece.player == selectedPiece.player.opponent()
+
+        val promotion = (
+            selectedPiece.type == PAWN && (
+                (selectedPiece.player == Player.WHITE && end.rank == 8) ||
+                (selectedPiece.player == Player.BLACK && end.rank == 1)
+            )
+        )
 
         return ChessMove(
             game = this,
@@ -172,16 +177,7 @@ class ChessGame {
             }
         }
 
-        // Update if a player is in check
-        // Should only happen to the player whose turn it is not
-        inCheck = if (isKingInCheck(Player.WHITE, whiteKingPos)) {
-            Player.WHITE
-        } else if (isKingInCheck(Player.BLACK, blackKingPos)) {
-            Player.BLACK
-        } else Player.NONE
-
-        if (inCheck == turn)
-            Log.e("ChessGame", "Player $turn moved into check!")
+        updateInCheck()
 
         move.check = inCheck
 
@@ -194,9 +190,43 @@ class ChessGame {
         movablePositions = mutableListOf()
         onMoveListener?.invoke()
 
+        if (move.promotion) {
+            onPromotionListener?.invoke(move.piece.player)
+        }
+
         checkIfMate()
 
         return MoveResult.MOVE_GOOD
+    }
+
+    private fun updateInCheck() {
+        // Update if a player is in check
+        // Should only happen to the player whose turn it is not
+        inCheck = if (isKingInCheck(Player.WHITE, whiteKingPos)) {
+            Player.WHITE
+        } else if (isKingInCheck(Player.BLACK, blackKingPos)) {
+            Player.BLACK
+        } else Player.NONE
+
+        if (inCheck == turn)
+            Log.e("ChessGame", "Player $turn moved into check!")
+    }
+
+    /**
+     * Promotes the last moved piece to the specified type and updates the board accordingly.
+     */
+    fun promote(pieceType: PieceType) {
+        // Manually have to 'turn' back time so checking works properly
+        turn = turn.opponent()
+        lastMove.piece.type = pieceType // probably remove this
+        lastMove.promotionPiece = pieceType
+        board.set(position = lastMove.end, piece = lastMove.piece)
+        updateInCheck()
+        lastMove.check = inCheck
+        println("inCheck: $inCheck")
+        val mate = checkIfMate()
+        println("mate: $mate")
+        turn = turn.opponent() // Re'turn' to proper player
     }
 
     // Takes a move in algebraic notation, e.g. Qf8
@@ -380,13 +410,13 @@ class ChessGame {
         var pos: Position
         var piece: ChessPiece
         var i = 1
-        println("performing linear check for $player originating at $position with scalars {r $rightOffsetScalar, u $upOffsetScalar}, pieceType = $pieceType")
-        println(board.toString())
+//        println("performing linear check for $player originating at $position with scalars {r $rightOffsetScalar, u $upOffsetScalar}, pieceType = $pieceType")
+//        println(board.toString())
         do {
             pos = board.getRelativePosition(position = position, rightOffset = rightOffsetScalar * i, upOffset = upOffsetScalar * i)
             piece = board.get(pos)
-            println("lin check looping; pos: $pos with piece $piece")
-            println("piece.player = ${piece.player}, player = $player")
+//            println("lin check looping; pos: $pos with piece $piece")
+//            println("piece.player = ${piece.player}, player = $player")
             if (piece.player == player.opponent()) {
                 if (pieceType == ROOK) {
                     return (piece.type == ROOK || piece.type == QUEEN)
@@ -405,6 +435,7 @@ class ChessGame {
             Player.WHITE -> board.whitePiecePositions.toList()
             else -> board.blackPiecePositions.toList()
         }
+        println("positions for checkIfMate: ${positions.joinToString {" "}}")
         var temp: MutableList<Position>
         for (pos in positions) {
             temp = board.get(pos).getMovablePositions(this, pos, true)
@@ -485,7 +516,7 @@ class ChessGame {
                 start = start,
                 end = pos,
                 capture = ChessPiece.NULL,
-                promotion = NONE,
+                promotion = false,
                 castle = false
             )
 //            println("test move: $testMove")
@@ -528,7 +559,7 @@ class ChessGame {
                 start = start,
                 end = pos,
                 capture = ChessPiece.NULL,
-                promotion = NONE,
+                promotion = false,
                 castle = false
             )
 //            println("test move: $testMove")

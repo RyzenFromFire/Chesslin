@@ -7,7 +7,6 @@ class ChessPiece(var type: PieceType = PieceType.NONE, val player: Player = Play
     var hasMoved = false
         set(value) {
             hasJustMoved = !field && value
-            println("$this hasJustMoved?=$hasJustMoved")
             field = value
         }
     var hasJustMoved = false
@@ -103,7 +102,7 @@ class ChessPiece(var type: PieceType = PieceType.NONE, val player: Player = Play
                 start = startingPosition,
                 end = endPos,
                 capture = if (game.board.get(endPos) != ChessPiece.NULL) game.board.get(endPos) else ChessPiece.NULL,
-                promotion = PieceType.NONE,
+                promotion = false,
                 castle = false
             )
         }

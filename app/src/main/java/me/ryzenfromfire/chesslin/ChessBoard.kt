@@ -56,7 +56,7 @@ class ChessBoard {
                 return if (index in File.values().indices) {
                     File.values()[index]
                 } else {
-                    Log.e("ChessBoard.File", "Invalid file conversion with index $index")
+                    Log.w("ChessBoard.File", "Invalid file conversion with index $index")
                     null
                 }
             }
@@ -111,10 +111,12 @@ class ChessBoard {
                 WHITE -> {
                     // If `position` was set to a white piece, add that position to the appropriate set
                     whitePiecePositions.add(position)
+                    blackPiecePositions.remove(position) // Removes the position from black's positions if a capture occurred
                 }
                 BLACK -> {
                     // Same for black
                     blackPiecePositions.add(position)
+                    whitePiecePositions.remove(position) // Remove from white's positions when captured
                 }
                 else -> {
                     // If `position` was set to empty (ChessPiece.NULL), remove the position from either set if it exists.

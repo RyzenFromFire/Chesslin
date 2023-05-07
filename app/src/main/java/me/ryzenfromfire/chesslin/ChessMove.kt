@@ -14,7 +14,7 @@ class ChessMove(
     val start: Position,
     val end: Position,
     val capture: ChessPiece = ChessPiece(),
-    val promotion: PieceType = PieceType.NONE,
+    val promotion: Boolean = false,
     val castle: Boolean = false
 ) {
     var check: Player = Player.NONE // the player who is checked as a result of the move
@@ -24,6 +24,7 @@ class ChessMove(
             if (game == null) return false
             return (this.end in piece.getMovablePositions(game, start))
         }
+    var promotionPiece: PieceType = PieceType.NONE
     private var notation: String = ""
 
     init {
@@ -91,9 +92,9 @@ class ChessMove(
         sb.append(end.toString())
 
         // Promotion Logic
-        if (promotion != PieceType.NONE) {
-            if (promotion == KING || promotion == PAWN) valid = false
-            else sb.append("=${promotion.str}")
+        if (promotionPiece != PieceType.NONE) {
+            if (promotionPiece == KING || promotionPiece == PAWN) valid = false
+            else sb.append("=${promotionPiece.str}")
         }
 
         if (check != Player.NONE) {
