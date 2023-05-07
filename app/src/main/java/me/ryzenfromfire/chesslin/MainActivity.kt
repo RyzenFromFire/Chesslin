@@ -15,7 +15,7 @@ import android.graphics.drawable.GradientDrawable
 import android.media.AudioManager
 import android.os.Bundle
 import android.view.*
-import android.widget.TextView
+import android.widget.ImageView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
@@ -37,7 +37,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var boardViewArray: Array<Array<SquareImageView>>
     private lateinit var game: ChessGame
 
-    private lateinit var turnTextView: TextView
+    private lateinit var statusImageViewWhite: ImageView
+    private lateinit var statusLayoutWhite: ConstraintLayout
+    private lateinit var statusImageViewBlack: ImageView
+    private lateinit var statusLayoutBlack: ConstraintLayout
 
     private var followerView: SquareImageView? = null
     private val followerViewScalar = 1.66f
@@ -69,11 +72,16 @@ class MainActivity : AppCompatActivity() {
         boardGridLayout.columnCount = NUM_RANKS_FILES
         boardGridLayout.rowCount = NUM_RANKS_FILES
 
+        statusImageViewWhite = findViewById(R.id.statusImageViewWhite)
+        statusImageViewBlack = findViewById(R.id.statusImageViewBlack)
+        statusLayoutWhite = findViewById(R.id.statusLayoutWhite)
+        statusImageViewWhite.background = getStatusLayoutBackground()
+        statusLayoutBlack = findViewById(R.id.statusLayoutBlack)
+        statusLayoutBlack.rotation = 180f
+
         followerViewRadius = ((boardGridLayout.width / NUM_RANKS_FILES) * followerViewScalar).roundToInt() / 4.0f
 
         boardViewArray = Array(NUM_RANKS_FILES) { Array(NUM_RANKS_FILES) { SquareImageView(this) } }
-
-        turnTextView = findViewById(R.id.turnTextView)
 
         dialogBuilder = AlertDialog.Builder(this)
 
@@ -168,6 +176,11 @@ class MainActivity : AppCompatActivity() {
                 val v = getView(pos)
                 if (v != null) resetViewDrawable(v, pos)
             }
+            if (boardFlipped) {
+                statusLayoutBlack.rotation = 180f
+            } else {
+                statusLayoutBlack.rotation = 0f
+            }
         }
 
         return super.onOptionsItemSelected(item)
@@ -191,9 +204,22 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun switchTurn() {
-        if (game.turn == Player.BLACK)
-            turnTextView.text = getString(R.string.turn_black)
-        else turnTextView.text = getString(R.string.turn_white)
+        if (game.turn == Player.BLACK) {
+            statusImageViewBlack.background = getStatusLayoutBackground()
+            statusImageViewWhite.background = null
+        } else {
+            statusImageViewWhite.background = getStatusLayoutBackground()
+            statusImageViewBlack.background = null
+        }
+    }
+
+    private fun getStatusLayoutBackground(): GradientDrawable {
+        val gd = GradientDrawable()
+        gd.colors = intArrayOf(getColor(R.color.selectionColor), getColor(android.R.color.transparent))
+        gd.shape = GradientDrawable.RECTANGLE
+        gd.gradientType = GradientDrawable.LINEAR_GRADIENT
+        gd.orientation = GradientDrawable.Orientation.LEFT_RIGHT
+        return gd
     }
 
     private fun addPositionShadow(position: Position): Boolean {

@@ -7,6 +7,38 @@
   android:id="@+id/layout_main"
   tools:context=".MainActivity">
 
+  <androidx.constraintlayout.widget.ConstraintLayout
+    android:id="@+id/statusLayoutBlack"
+    android:layout_width="0dp"
+    android:layout_height="0dp"
+    android:layout_marginTop="4dp"
+    android:layout_marginBottom="8dp"
+    app:layout_constraintBottom_toTopOf="@+id/boardImageView"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toTopOf="parent">
+
+    <ImageView
+      android:id="@+id/statusImageViewBlack"
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      app:layout_constraintBottom_toBottomOf="parent"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toTopOf="parent"
+      app:srcCompat="@drawable/chess_null" />
+
+    <TextView
+      android:id="@+id/nameTextViewBlack"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_marginStart="16dp"
+      android:layout_marginTop="16dp"
+      android:text="@string/player_name_black"
+      android:textSize="24sp"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toTopOf="parent" />
+  </androidx.constraintlayout.widget.ConstraintLayout>
+
   <me.ryzenfromfire.chesslin.SquareImageView
       android:id="@+id/boardImageView"
       android:layout_width="0dp"
@@ -34,26 +66,36 @@
 
   </androidx.gridlayout.widget.GridLayout>
 
-  <TextView
-    android:id="@+id/turnTextView"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_marginStart="16dp"
-    android:layout_marginTop="32dp"
-    android:layout_marginEnd="16dp"
-    android:text="@string/turn_white"
-    android:textSize="25sp"
+  <androidx.constraintlayout.widget.ConstraintLayout
+    android:id="@+id/statusLayoutWhite"
+    android:layout_width="0dp"
+    android:layout_height="0dp"
+    android:layout_marginTop="8dp"
+    android:layout_marginBottom="4dp"
+    app:layout_constraintBottom_toBottomOf="parent"
     app:layout_constraintEnd_toEndOf="parent"
     app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toTopOf="parent" />
+    app:layout_constraintTop_toBottomOf="@id/boardImageView">
 
-  <TextView
-      android:id="@+id/debugView"
+    <ImageView
+      android:id="@+id/statusImageViewWhite"
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      app:layout_constraintBottom_toBottomOf="parent"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toTopOf="parent"
+      app:srcCompat="@drawable/chess_null" />
+
+    <TextView
+      android:id="@+id/nameTextViewWhite"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
-      app:layout_constraintBottom_toBottomOf="parent"
-      app:layout_constraintEnd_toEndOf="parent"
+      android:layout_marginStart="16dp"
+      android:layout_marginTop="16dp"
+      android:text="@string/player_name_white"
+      android:textSize="24sp"
       app:layout_constraintStart_toStartOf="parent"
-      app:layout_constraintTop_toBottomOf="@+id/boardImageView" />
+      app:layout_constraintTop_toTopOf="parent" />
+  </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

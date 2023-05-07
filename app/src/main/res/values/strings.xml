@@ -11,4 +11,6 @@
   <string name="promotion_text_2">Choose\na piece!</string>
   <string name="action_flip">Flip Pieces</string>
   <string name="action_reset">Reset Game</string>
+  <string name="player_name_white">White</string>
+  <string name="player_name_black">Black</string>
 </resources>
