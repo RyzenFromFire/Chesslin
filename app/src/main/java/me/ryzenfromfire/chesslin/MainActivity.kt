@@ -9,6 +9,7 @@ package me.ryzenfromfire.chesslin
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.Color
 import android.graphics.Matrix
 import android.graphics.drawable.GradientDrawable
 import android.media.AudioManager
@@ -149,6 +150,14 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_layout, menu)
+//        val attrs = intArrayOf(android.R.attr.textColor)
+//        val styledAttrs = obtainStyledAttributes(attrs)
+//        val textColor = styledAttrs.getColor(0, Color.GRAY)
+//        styledAttrs.recycle()
+//        println("text color: ${Integer.toHexString(textColor)}")
+        val textColor = Color.WHITE
+        menu?.findItem(R.id.action_reset)?.icon?.setTint(textColor)
+        menu?.findItem(R.id.action_flip)?.icon?.setTint(textColor)
         return super.onCreateOptionsMenu(menu)
     }
 
