@@ -9,4 +9,6 @@
   <string name="new_game">New Game</string>
   <string name="promotion_text_1">Promotion!</string>
   <string name="promotion_text_2">Choose\na piece!</string>
+  <string name="action_flip">Flip Pieces</string>
+  <string name="action_reset">Reset Game</string>
 </resources>

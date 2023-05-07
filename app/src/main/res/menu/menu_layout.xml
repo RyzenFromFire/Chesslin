@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto">
+
+  <item android:id="@+id/action_reset"
+    android:title="@string/action_reset"
+    android:icon="@drawable/action_reset"
+    app:showAsAction="always"/>
+
+  <item android:id="@+id/action_flip"
+    android:title="@string/action_flip"
+    android:icon="@drawable/action_flip"
+    app:showAsAction="ifRoom"/>
+
+</menu>

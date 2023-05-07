@@ -13,9 +13,7 @@ import android.graphics.Matrix
 import android.graphics.drawable.GradientDrawable
 import android.media.AudioManager
 import android.os.Bundle
-import android.view.Gravity
-import android.view.MotionEvent
-import android.view.View
+import android.view.*
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
@@ -147,12 +145,28 @@ class MainActivity : AppCompatActivity() {
         game.onPromotionListener = { player ->
             onPromotionCallback(player)
         }
+    }
 
-        // For Debug
-        resetButton = findViewById(R.id.resetButton)
-        resetButton.setOnClickListener {
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu_layout, menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == R.id.action_reset) {
             resetGame()
+            return true
         }
+
+        if (item.itemId == R.id.action_flip) {
+            boardFlipped = !boardFlipped
+            for (pos in game.board.blackPiecePositions) {
+                val v = getView(pos)
+                if (v != null) resetViewDrawable(v, pos)
+            }
+        }
+
+        return super.onOptionsItemSelected(item)
     }
 
     private fun resetGame() {
@@ -450,4 +464,6 @@ class MainActivity : AppCompatActivity() {
         promotionDialog.setPlayer(player, boardFlipped)
         promotionDialog.show()
     }
+
+
 }
