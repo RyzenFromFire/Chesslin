@@ -42,13 +42,13 @@ class MainActivity : AppCompatActivity() {
 
     // TODO: Remove; for debug only
     private lateinit var debugTextView: TextView
-    private lateinit var resetButton: Button
 
     private var followerView: SquareImageView? = null
     private val followerViewScalar = 1.66f
     private var followerViewRadius = 0.0f
 
     private var shadowedPositions = mutableListOf<Position>()
+    private var highlightedPositions = mutableListOf<Position>()
 
     private var boardFlipped = true
 
@@ -351,10 +351,45 @@ class MainActivity : AppCompatActivity() {
         game.onSelectListener?.invoke()
         switchTurn()
         audioManager.playSoundEffect(AudioManager.FX_KEY_CLICK)
-//            println("White Piece Positions: [ ${game.board.whitePiecePositions.joinToString(" ")} ]")
-//            println("Black Piece Positions: [ ${game.board.blackPiecePositions.joinToString(" ")} ]")
+
+        // remove old highlights
+        for (position in highlightedPositions) {
+            removePositionHighlight(position)
+        }
+
+        // add new highlights
+        addPositionHighlight(game.lastMove.start)
+        addPositionHighlight(game.lastMove.end)
+
 
 //        updateCheck()
+    }
+
+    private fun addPositionHighlight(position: Position): Boolean {
+        return if (position.valid) {
+            val v = boardViewArray[position.rank - 1][position.file.index]
+            v.background = getHighlightDrawable(v)
+            highlightedPositions.add(position)
+            true
+        } else false
+    }
+
+    private fun removePositionHighlight(position: Position) {
+        boardViewArray[position.rank - 1][position.file.index].background = null
+    }
+
+    private fun getHighlightDrawable(v: View): GradientDrawable {
+        // Creating backdrop shadow
+        // https://stackoverflow.com/questions/45608049/how-to-make-a-circular-drawable-with-stroke-programmatically/45608694
+        val gd = GradientDrawable()
+//        gd.color = ContextCompat.getColorStateList(this, R.color.highlight)
+        gd.colors = intArrayOf(getColor(R.color.highlight), getColor(android.R.color.transparent))
+        gd.gradientType = GradientDrawable.RADIAL_GRADIENT
+        gd.gradientRadius = 0.5f * v.width
+//        gd.shape = GradientDrawable.RECTANGLE
+
+//        gd.setStroke(1, getColor(R.color.black))
+        return gd
     }
 
     private fun updateCheckViewBackground() {
