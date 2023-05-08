@@ -13,4 +13,6 @@
   <string name="action_reset">Reset Game</string>
   <string name="player_name_white">White</string>
   <string name="player_name_black">Black</string>
+  <string name="stalemate_text">The game has resulted in a stalemate.</string>
+  <string name="stalemate_dialog_title">Stalemate</string>
 </resources>

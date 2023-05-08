@@ -29,6 +29,7 @@ class ChessGame {
     var onSelectListener: (() -> Unit)? = null
     var onCheckmateListener: ((Player) -> Unit)? = null // Player passed is the player who has been checkmated
     var onPromotionListener: ((Player) -> Unit)? = null
+    var onStalemateListener: (() -> Unit)? = null
 
     enum class Player(val str: String) {
         NONE("None"),
@@ -194,7 +195,7 @@ class ChessGame {
             onPromotionListener?.invoke(move.piece.player)
         }
 
-        checkIfMate()
+        checkIfMate() // checks for checkmate or stalemate
 
         return MoveResult.MOVE_GOOD
     }
@@ -218,14 +219,11 @@ class ChessGame {
     fun promote(pieceType: PieceType) {
         // Manually have to 'turn' back time so checking works properly
         turn = turn.opponent()
-        lastMove.piece.type = pieceType // probably remove this
         lastMove.promotionPiece = pieceType
         board.set(position = lastMove.end, piece = lastMove.piece)
         updateInCheck()
         lastMove.check = inCheck
-        println("inCheck: $inCheck")
-        val mate = checkIfMate()
-        println("mate: $mate")
+        checkIfMate()
         turn = turn.opponent() // Re'turn' to proper player
     }
 
@@ -430,20 +428,26 @@ class ChessGame {
     }
 
     private fun checkIfMate(): Boolean {
-        if (inCheck == Player.NONE) return false
         val positions = when (inCheck) {
             Player.WHITE -> board.whitePiecePositions.toList()
-            else -> board.blackPiecePositions.toList()
+            Player.BLACK -> board.blackPiecePositions.toList()
+            Player.NONE -> {
+                when (turn) {
+                    Player.BLACK -> board.blackPiecePositions.toList()
+                    else -> board.whitePiecePositions.toList()
+                }
+            }
         }
-        println("positions for checkIfMate: ${positions.joinToString {" "}}")
         var temp: MutableList<Position>
         for (pos in positions) {
             temp = board.get(pos).getMovablePositions(this, pos, true)
             // If there is a legal move, it is not checkmate
             if (temp.isNotEmpty()) return false
         }
-        // At this point, all of the player's positions have been checked, and there are no legal moves, so it is checkmate.
-        onCheckmateListener?.invoke(inCheck)
+        // At this point, all of the player's positions have been checked, and there are no legal moves,
+        // so it is either checkmate or stalemate, depending on if a player is in check.
+        if (inCheck == Player.NONE) onStalemateListener?.invoke()
+        else onCheckmateListener?.invoke(inCheck)
         return true
     }
 

@@ -139,6 +139,10 @@ class MainActivity : AppCompatActivity() {
             onCheckmateCallback(player)
         }
 
+        game.onStalemateListener = { ->
+            onStalemateCallback()
+        }
+
         promotionDialog = PromotionDialog(this)
         promotionDialog.onPromotionListener = {
             println("selected piece: $promotionPiece")
@@ -519,6 +523,15 @@ class MainActivity : AppCompatActivity() {
         val text = StringBuilder()
         text.append(player.opponent().str).append(" ").append(getString(R.string.player_victory_text))
         dialogBuilder.setMessage(text)
+        dialogBuilder.setPositiveButton(R.string.new_game) { dialog, which ->
+            resetGame()
+        }
+        dialogBuilder.show()
+    }
+
+    private fun onStalemateCallback() {
+        dialogBuilder.setTitle(getString(R.string.stalemate_dialog_title))
+        dialogBuilder.setMessage(getString(R.string.stalemate_text))
         dialogBuilder.setPositiveButton(R.string.new_game) { dialog, which ->
             resetGame()
         }
