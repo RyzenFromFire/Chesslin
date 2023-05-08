@@ -7,6 +7,11 @@ import me.ryzenfromfire.chesslin.ChessBoard.File.Companion.fileNames
 import me.ryzenfromfire.chesslin.ChessBoard.Position
 import me.ryzenfromfire.chesslin.ChessBoard.File
 
+/**
+ * Primary game state manager and model.
+ * Keeps track of turn, moves, selections, check, and game status.
+ * Provides listeners for view/controller to use to update UI elements.
+ */
 class ChessGame {
     var turn = Player.WHITE
     val board = ChessBoard()
@@ -219,67 +224,13 @@ class ChessGame {
     fun promote(pieceType: PieceType) {
         // Manually have to 'turn' back time so checking works properly
         turn = turn.opponent()
+        lastMove.piece.promote(pieceType)
         lastMove.promotionPiece = pieceType
         board.set(position = lastMove.end, piece = lastMove.piece)
         updateInCheck()
         lastMove.check = inCheck
         checkIfMate()
         turn = turn.opponent() // Re'turn' to proper player
-    }
-
-    // Takes a move in algebraic notation, e.g. Qf8
-    // TODO: The only reason this is still around is I think it might be useful for generating algebraic notation when I get around to that
-    @Deprecated("Deprecated and soon to be replaced with new functionality")
-    fun moveOlder(str: String) {
-
-        // If the first character of the algebraic notation is 'a'..'h', then the piece is a pawn.
-        val pieceType: PieceType
-        val originSquare: PieceType
-        val first = str.lowercase().first()
-        if (first in fileNames) {
-            val file = first
-            // Pawn move without capture (ex. c5)
-            if (str.length == 2) {
-                val destRank = str[1].digitToInt()
-                val origRank: Int = if (turn == Player.WHITE) {
-                    if (board.get("${str[0]}${destRank - 2}").type == PieceType.PAWN)
-                        destRank - 2
-                    else
-                        destRank - 1
-                } else if (turn == Player.BLACK) {
-                    if (board.get("${str[0]}${destRank + 2}").type == PieceType.PAWN)
-                        destRank + 2
-                    else
-                        destRank + 1
-                } else destRank // error state, should never occur
-                // TODO: make a board.move function to let that handle the setting instead of this:
-                board.set("$file${origRank}", turn, PieceType.NONE)
-                board.set("$file${destRank}", turn, PieceType.PAWN)
-            }
-            // Pawn move with capture
-            else if (str.length == 4 && str[1].equals('x', true)) {
-                // TODO: Implement
-                print("pawn move capture")
-            }
-        } else { // Otherwise it is a non-pawn piece
-            pieceType = PieceType.parseShort(str[0].toString())
-
-            val isCapture: Boolean
-            val offset: Int
-            if (str[1].equals('x', true)) {
-                // TODO: Deal with capture
-                offset = 1
-                isCapture = true
-            } else {
-                offset = 0
-                isCapture = false
-            }
-
-            val substr = str.substring(1 + offset, 2 + offset)
-        }
-
-
-        switchTurn()
     }
 
     /**

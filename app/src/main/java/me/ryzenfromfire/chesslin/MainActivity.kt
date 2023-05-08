@@ -50,11 +50,10 @@ class MainActivity : AppCompatActivity() {
     private var highlightedPositions = mutableListOf<Position>()
 
     private var boardFlipped = true
-
-    private lateinit var audioManager: AudioManager
     private var lastSelectedPosition = Position.NULL
     private val selectedPieceAlpha = 0.4f
 
+    private lateinit var audioManager: AudioManager
     private lateinit var dialogBuilder: AlertDialog.Builder
     private lateinit var promotionDialog: PromotionDialog
     private var promotionPiece = PieceType.NONE
@@ -77,13 +76,13 @@ class MainActivity : AppCompatActivity() {
         statusLayoutWhite = findViewById(R.id.statusLayoutWhite)
         statusImageViewWhite.background = getStatusLayoutBackground()
         statusLayoutBlack = findViewById(R.id.statusLayoutBlack)
-        statusLayoutBlack.rotation = 180f
+        statusLayoutBlack.rotation = 180f // default to board being flipped
+
+        dialogBuilder = AlertDialog.Builder(this)
 
         followerViewRadius = ((boardGridLayout.width / NUM_RANKS_FILES) * followerViewScalar).roundToInt() / 4.0f
 
         boardViewArray = Array(NUM_RANKS_FILES) { Array(NUM_RANKS_FILES) { SquareImageView(this) } }
-
-        dialogBuilder = AlertDialog.Builder(this)
 
         // Dynamic GridLayout Generation adapted from:
         // https://stackoverflow.com/questions/14728157/dynamic-gridlayout
@@ -155,25 +154,27 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /** Create app bar/action item menu and set icons to white
+     * This works for default light and dark theme on both emulator and physical device,
+     * at least in my experience, since the light theme with dark action bar uses white text.
+     */
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_layout, menu)
-//        val attrs = intArrayOf(android.R.attr.textColor)
-//        val styledAttrs = obtainStyledAttributes(attrs)
-//        val textColor = styledAttrs.getColor(0, Color.GRAY)
-//        styledAttrs.recycle()
-//        println("text color: ${Integer.toHexString(textColor)}")
-        val textColor = Color.WHITE
-        menu?.findItem(R.id.action_reset)?.icon?.setTint(textColor)
-        menu?.findItem(R.id.action_flip)?.icon?.setTint(textColor)
+        val iconColor = Color.WHITE
+        menu?.findItem(R.id.action_reset)?.icon?.setTint(iconColor)
+        menu?.findItem(R.id.action_flip)?.icon?.setTint(iconColor)
         return super.onCreateOptionsMenu(menu)
     }
 
+    // Perform appropriate actions when an action bar item is selected
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        // New game button
         if (item.itemId == R.id.action_reset) {
             resetGame()
             return true
         }
 
+        // Flip board button
         if (item.itemId == R.id.action_flip) {
             boardFlipped = !boardFlipped
             for (pos in game.board.blackPiecePositions) {
@@ -194,12 +195,14 @@ class MainActivity : AppCompatActivity() {
         this.recreate()
     }
 
+    // Retrieve a SquareImageView from the board view array given a position
     private fun getView(position: Position): SquareImageView? {
         return if (position.valid)
             boardViewArray[position.rank - 1][position.file.index]
         else null
     }
 
+    // Set the SquareImageView of the board view array given a position
     private fun setView(position: Position, view: SquareImageView): Boolean {
         return if (position.valid) {
             boardViewArray[position.rank - 1][position.file.index] = view
@@ -207,6 +210,7 @@ class MainActivity : AppCompatActivity() {
         } else false
     }
 
+    // Perform turn switching logic for the controller (switch which side is highlighted)
     private fun switchTurn() {
         if (game.turn == Player.BLACK) {
             statusImageViewBlack.background = getStatusLayoutBackground()
@@ -217,6 +221,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // Drawable for highlighting background of player whose turn it is
     private fun getStatusLayoutBackground(): GradientDrawable {
         val gd = GradientDrawable()
         gd.colors = intArrayOf(getColor(R.color.selectionColor), getColor(android.R.color.transparent))
@@ -226,6 +231,7 @@ class MainActivity : AppCompatActivity() {
         return gd
     }
 
+    // Given a position, add a positional shadow to the view at that position.
     private fun addPositionShadow(position: Position): Boolean {
         return if (position.valid) {
             val v = boardViewArray[position.rank - 1][position.file.index]
@@ -240,12 +246,14 @@ class MainActivity : AppCompatActivity() {
         } else false
     }
 
+    // Remove the positional shadow from the view at that position
     private fun removePositionShadow(position: Position) {
         boardViewArray[position.rank - 1][position.file.index].background = null
     }
 
     private fun resetViewDrawable(view: SquareImageView, position: Position) = resetViewDrawable(view, game.board.get(position))
 
+    // Reset the view drawable for the passed view to the appropriate image for the specified ChessPiece
     private fun resetViewDrawable(view: SquareImageView, piece: ChessPiece) {
         val id = piece.getDrawableID()
 
@@ -271,6 +279,10 @@ class MainActivity : AppCompatActivity() {
         return view
     }
 
+    /**
+     * Return a new enlarged view of the selected piece that can follow
+     * the user's finger while dragging the piece to move it to a new square
+     */
     @SuppressLint("ClickableViewAccessibility")
     private fun createFollowerView(v: View, piece: ChessPiece): SquareImageView {
         val followerView = createChessPieceView(piece)
@@ -324,6 +336,11 @@ class MainActivity : AppCompatActivity() {
         return gd
     }
 
+    /**
+     * Based on a passed coordinates from a MotionEvent and a source View,
+     * determine where on the chess board the player's finger is,
+     * then return the corresponding Position.
+     */
     private fun getPositionFromCoordinates(v: View, event: MotionEvent): Position {
         // Note: cell width (v.width) == 132px and board width = 1058px on Pixel 3a emulator
         // Debugging info for view and event coordinates
@@ -510,8 +527,7 @@ class MainActivity : AppCompatActivity() {
                     moveResult == MOVE_ILLEGAL) {
                     if (game.selectedPosition.valid)
                         resetViewDrawable(getView(game.selectedPosition)!!, game.selectedPiece)
-                } else /*if (moveResult == MOVE_GOOD) {
-                }*/
+                }
                 updateCheckViewBackground()
             }
         }

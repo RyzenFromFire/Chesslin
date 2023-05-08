@@ -7,6 +7,9 @@ import me.ryzenfromfire.chesslin.ChessPiece.PieceType.*
 import me.ryzenfromfire.chesslin.ChessGame.Player
 import me.ryzenfromfire.chesslin.ChessGame.Player.*
 
+/**
+ * Represents a single instance of a 'move' and all relevant data.
+ */
 class ChessMove(
     val game: ChessGame?,
     val num: Int,
@@ -57,8 +60,6 @@ class ChessMove(
                     }
                 } else valid = false
             }
-
-            // TODO: Invalidate move if it is not possible for the piece
         }
     }
 

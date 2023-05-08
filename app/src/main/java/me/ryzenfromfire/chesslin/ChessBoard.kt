@@ -6,6 +6,10 @@ import me.ryzenfromfire.chesslin.ChessPiece.PieceType
 import me.ryzenfromfire.chesslin.ChessGame.Player.*
 import me.ryzenfromfire.chesslin.ChessGame.Player
 
+/**
+ * Keeps track of the current state of the chess board and provides methods to modify piece locations.
+ * Does not track or consider most game state variables other than piece positions.
+ */
 class ChessBoard {
     // Access Syntax: boardArray[rank][file]
     private val boardArray = Array(NUM_RANKS_FILES) { Array(NUM_RANKS_FILES) { ChessPiece() } }

@@ -3,6 +3,10 @@ package me.ryzenfromfire.chesslin
 import me.ryzenfromfire.chesslin.ChessGame.Player
 import me.ryzenfromfire.chesslin.ChessBoard.Position
 
+/**
+ * Represents a single instance of a chess piece (for instance, a white pawn).
+ * Contains state about if it has moved (for castling and en passant).
+ */
 class ChessPiece(var type: PieceType = PieceType.NONE, val player: Player = Player.NONE) {
     var hasMoved = false
         set(value) {
@@ -32,24 +36,6 @@ class ChessPiece(var type: PieceType = PieceType.NONE, val player: Player = Play
             fun parseLong(fullName: String) = typeFullNameMap[fullName.lowercase().replaceFirstChar { it.uppercase() }] ?: NONE
         }
     }
-
-    private val drawables = arrayOf(
-        R.drawable.chess_null,
-        R.drawable.chess_plt45,
-        R.drawable.chess_nlt45,
-        R.drawable.chess_blt45,
-        R.drawable.chess_rlt45,
-        R.drawable.chess_qlt45,
-        R.drawable.chess_klt45,
-        R.drawable.chess_pdt45,
-        R.drawable.chess_ndt45,
-        R.drawable.chess_bdt45,
-        R.drawable.chess_rdt45,
-        R.drawable.chess_qdt45,
-        R.drawable.chess_kdt45
-    )
-
-    private val NUM_PIECES = 6
 
     fun getDrawableID(): Int {
         var idx = PieceType.values().indexOf(this.type)
@@ -90,6 +76,9 @@ class ChessPiece(var type: PieceType = PieceType.NONE, val player: Player = Play
     }
 
     // TODO: Consider refactoring PositionList and all the lists to MutableSet
+    /**
+     * A wrapper for a mutable list that implements methods to ease adding legal positions relative to a starting position.
+     */
     class PositionList(private val game: ChessGame, val startingPosition: Position) : ArrayList<Position>() {
         /**
          * Generates a simple move from this class instance's game, starting position, and the specified ending position.
@@ -128,6 +117,24 @@ class ChessPiece(var type: PieceType = PieceType.NONE, val player: Player = Play
 
     // Global/static methods for checking positions for the next move of a piece, given a game state
     companion object {
+        private val drawables = arrayOf(
+            R.drawable.chess_null,
+            R.drawable.chess_plt45,
+            R.drawable.chess_nlt45,
+            R.drawable.chess_blt45,
+            R.drawable.chess_rlt45,
+            R.drawable.chess_qlt45,
+            R.drawable.chess_klt45,
+            R.drawable.chess_pdt45,
+            R.drawable.chess_ndt45,
+            R.drawable.chess_bdt45,
+            R.drawable.chess_rdt45,
+            R.drawable.chess_qdt45,
+            R.drawable.chess_kdt45
+        )
+
+        const val NUM_PIECES = 6
+
         val NULL = ChessPiece()
 
         /**
