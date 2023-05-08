@@ -164,7 +164,7 @@ class ChessPiece(var type: PieceType = PieceType.NONE, val player: Player = Play
             targetPos = game.board.getRelativePosition(position, 0, 2 * getPawnDirection(player))
             if (!game.board.get(position).hasMoved &&
                 !game.board.isOccupied(targetPos) &&
-                !game.board.isOccupied(game.board.getRelativePosition(targetPos, 0, -1))
+                !game.board.isOccupied(game.board.getRelativePosition(targetPos, 0, -1 * getPawnDirection(player)))
             ) {
                 positions.addIfLegal(targetPos, checkLegality)
             }
