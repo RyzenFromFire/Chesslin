@@ -401,9 +401,12 @@ class MainActivity : AppCompatActivity() {
             removePositionHighlight(position)
         }
 
+        updateCheckViewBackground()
+
         // add new highlights
         addPositionHighlight(game.lastMove.start)
         addPositionHighlight(game.lastMove.end)
+        println(game.lastMove)
 
 //        updateCheck()
     }
@@ -525,10 +528,11 @@ class MainActivity : AppCompatActivity() {
                 if (moveResult == SAME_START_END_POS ||
                     moveResult == MOVE_ONTO_OWN_PIECE ||
                     moveResult == MOVE_ILLEGAL) {
-                    if (game.selectedPosition.valid)
+                    if (game.selectedPosition.valid) {
                         resetViewDrawable(getView(game.selectedPosition)!!, game.selectedPiece)
+                        updateCheckViewBackground()
+                    }
                 }
-                updateCheckViewBackground()
             }
         }
         return true
