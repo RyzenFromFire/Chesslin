@@ -226,14 +226,85 @@ class ChessPiece(var type: PieceType = PieceType.NONE, val player: Player = Play
 
         fun getKingPositions(game: ChessGame, position: Position, checkLegality: Boolean = true) : MutableList<Position> {
             val positions = PositionList(game, position)
-            positions.addIfLegal( 0, +1, checkLegality)
-            positions.addIfLegal(+1, +1, checkLegality)
-            positions.addIfLegal(+1,  0, checkLegality)
-            positions.addIfLegal(+1, -1, checkLegality)
-            positions.addIfLegal( 0, -1, checkLegality)
-            positions.addIfLegal(-1, -1, checkLegality)
-            positions.addIfLegal(-1,  0, checkLegality)
-            positions.addIfLegal(-1, +1, checkLegality)
+
+            // Validation so kings can't move into each other's space
+            val opponentKingPos = when (game.board.get(position).player) {
+                Player.WHITE -> game.blackKingPos
+                Player.BLACK -> game.whiteKingPos
+                else -> Position.NULL
+            }
+
+            if (!checkLegality || (
+                game.board.getRelativePosition(position, -1, +2) != opponentKingPos &&
+                game.board.getRelativePosition(position,  0, +2) != opponentKingPos &&
+                game.board.getRelativePosition(position, +1, +2) != opponentKingPos
+            )) {
+                positions.addIfLegal( 0, +1, checkLegality)
+            }
+
+            if (!checkLegality || (
+                game.board.getRelativePosition(position,  0, +2) != opponentKingPos &&
+                game.board.getRelativePosition(position, +1, +2) != opponentKingPos &&
+                game.board.getRelativePosition(position, +2, +2) != opponentKingPos &&
+                game.board.getRelativePosition(position, +2, +1) != opponentKingPos &&
+                game.board.getRelativePosition(position, +2,  0) != opponentKingPos
+            )) {
+                positions.addIfLegal(+1, +1, checkLegality)
+            }
+
+            if (!checkLegality || (
+                game.board.getRelativePosition(position, +2, -1) != opponentKingPos &&
+                game.board.getRelativePosition(position, +2, 0) != opponentKingPos &&
+                game.board.getRelativePosition(position, +2, +1) != opponentKingPos
+            )) {
+                positions.addIfLegal(+1,  0, checkLegality)
+            }
+
+            if (!checkLegality || (
+                game.board.getRelativePosition(position,  0, -2) != opponentKingPos &&
+                game.board.getRelativePosition(position, +1, -2) != opponentKingPos &&
+                game.board.getRelativePosition(position, +2, -2) != opponentKingPos &&
+                game.board.getRelativePosition(position, +2, -1) != opponentKingPos &&
+                game.board.getRelativePosition(position, +2, 0) != opponentKingPos
+            )) {
+                positions.addIfLegal(+1, -1, checkLegality)
+            }
+
+            if (!checkLegality || (
+                game.board.getRelativePosition(position, -1, -2) != opponentKingPos &&
+                game.board.getRelativePosition(position,  0, -2) != opponentKingPos &&
+                game.board.getRelativePosition(position, +1, -2) != opponentKingPos
+            )) {
+                positions.addIfLegal(0, -1, checkLegality)
+            }
+
+            if (!checkLegality || (
+                game.board.getRelativePosition(position,  0, -2) != opponentKingPos &&
+                game.board.getRelativePosition(position, -1, -2) != opponentKingPos &&
+                game.board.getRelativePosition(position, -2, -2) != opponentKingPos &&
+                game.board.getRelativePosition(position, -2, -1) != opponentKingPos &&
+                game.board.getRelativePosition(position, -2, 0) != opponentKingPos
+            )) {
+                positions.addIfLegal(-1, -1, checkLegality)
+            }
+
+            if (!checkLegality || (
+                game.board.getRelativePosition(position, -2, -1) != opponentKingPos &&
+                game.board.getRelativePosition(position, -2, 0) != opponentKingPos &&
+                game.board.getRelativePosition(position, -2, +1) != opponentKingPos
+            )) {
+                positions.addIfLegal(-1,  0, checkLegality)
+            }
+
+            if (!checkLegality || (
+                game.board.getRelativePosition(position,  0, +2) != opponentKingPos &&
+                game.board.getRelativePosition(position, -1, +2) != opponentKingPos &&
+                game.board.getRelativePosition(position, -2, +2) != opponentKingPos &&
+                game.board.getRelativePosition(position, -2, +1) != opponentKingPos &&
+                game.board.getRelativePosition(position, -2, 0) != opponentKingPos
+            )) {
+                positions.addIfLegal(-1, +1, checkLegality)
+            }
 
             // Castling Logic
             val piece = game.board.get(position)

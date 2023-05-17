@@ -518,11 +518,11 @@ class MainActivity : AppCompatActivity() {
 
                 destroyFollowerView()
 
-                println("sel pos: ${game.selectedPosition}")
+//                println("sel pos: ${game.selectedPosition}")
 
                 // Attempt to move to the new position
                 val moveResult = game.move(newPos)
-                println("move result: $moveResult")
+//                println("move result: $moveResult")
 
                 // If the move was unsuccessful because of the following, reset:
                 if (moveResult == SAME_START_END_POS ||
